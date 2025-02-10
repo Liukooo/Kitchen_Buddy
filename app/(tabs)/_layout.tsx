@@ -1,7 +1,6 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { Platform } from 'react-native';
-
 import { HapticTab } from '@/components/HapticTab';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import TabBarBackground from '@/components/ui/TabBarBackground';
@@ -14,7 +13,7 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarActiveTintColor: Colors[colorScheme ?? 'dark'].tint,
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
@@ -27,17 +26,24 @@ export default function TabLayout() {
         }),
       }}>
       <Tabs.Screen
-        name="index"
+        name="addIngredient"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: 'Add Ingredient',
+          tabBarIcon: ({ color,  focused }) => <IconSymbol size={28} name={focused ? 'plus.circle.fill' : 'plus.circle'} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="expiringSoonIngredient"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: 'Expiring soon',
+          tabBarIcon: ({ color,  focused }) => <IconSymbol size={28} name={focused ? 'hourglass.bottomhalf.fill' : 'hourglass'} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="infoIngredient"
+        options={{
+          title: 'More Info',
+          tabBarIcon: ({ color,  focused }) => <IconSymbol size={28} name={focused ? 'info.circle.fill' : 'info.circle'} color={color} />,
         }}
       />
     </Tabs>

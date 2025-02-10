@@ -9,10 +9,14 @@ import { OpaqueColorValue, StyleProp, ViewStyle } from 'react-native';
 const MAPPING = {
   // See MaterialIcons here: https://icons.expo.fyi
   // See SF Symbols in the SF Symbols app on Mac.
-  'house.fill': 'home',
-  'paperplane.fill': 'send',
-  'chevron.left.forwardslash.chevron.right': 'code',
-  'chevron.right': 'chevron-right',
+  'plus.circle.fill': 'add-circle',
+  'plus.circle': 'add-circle-outline',
+  'hourglass.bottomhalf.fill': 'hourglass-bottom',
+  'hourglass':'hourglass-empty',
+  'info.circle.fill':'info',
+  'info.circle':'info-outline',
+  'trash':'delete-outline',
+  'pencil':'mode-edit'
 } as Partial<
   Record<
     import('expo-symbols').SymbolViewProps['name'],
@@ -39,5 +43,5 @@ export function IconSymbol({
   style?: StyleProp<ViewStyle>;
   weight?: SymbolWeight;
 }) {
-  return <MaterialIcons color={color} size={size} name={MAPPING[name]} style={style} />;
+  return <MaterialIcons color={color} size={size} name={MAPPING[name]}/>;
 }
