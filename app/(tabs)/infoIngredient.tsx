@@ -12,6 +12,7 @@ import {
 } from '@/scripts/ingredientQueries';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
+import { Categories, Locations, Types} from '@/constants/Options';
 import { useNavigation, useFocusEffect  } from "@react-navigation/native";
 import type { StackNavigationProp } from "@react-navigation/stack";
 
@@ -121,7 +122,7 @@ const InfoIngredientsScreen: React.FC = () => {
 
   return (
     <ThemedView style={styles.container}>
-      <ThemedView style={styles.titleContainer}>
+      <ThemedView>
         <ThemedText type="title">Explore Ingredients</ThemedText>
       </ThemedView>
       {/* Buttons */}
@@ -162,13 +163,9 @@ const InfoIngredientsScreen: React.FC = () => {
         style={styles.picker}
         onValueChange={(itemValue) => setSelectedCategory(itemValue)}
       >
-        <Picker.Item label="All Categories" value="" />
-        <Picker.Item label="Fruit" value="fruit" />
-        <Picker.Item label="Vegetable" value="vegetable" />
-        <Picker.Item label="Dairy" value="dairy" />
-        <Picker.Item label="Fish" value="fish" />
-        <Picker.Item label="Meat" value="meat" />
-        <Picker.Item label="Beverage" value="beverage" />
+        {Categories.map((item) => (
+            <Picker.Item key={item.value} label={item.label} value={item.value} />
+          ))}
       </Picker>
 
       {/* Location */}
@@ -178,24 +175,21 @@ const InfoIngredientsScreen: React.FC = () => {
         style={styles.picker}
         onValueChange={(itemValue) => setSelectedLocation(itemValue)}
       >
-        <Picker.Item label="All Locations" value="" />
-        <Picker.Item label="Fridge" value="fridge" />
-        <Picker.Item label="Freezer" value="freezer" />
-        <Picker.Item label="Pantry" value="pantry" />
+        {Locations.map((item) => (
+            <Picker.Item key={item.value} label={item.label} value={item.value} />
+          ))}
       </Picker>
 
-      {/* Type */}
+      {/* Confection Type */}
       <ThemedText style={styles.label}>Confection Type:</ThemedText>
       <Picker
         selectedValue={selectedConfection}
         style={styles.picker}
         onValueChange={(itemValue) => setSelectedConfection(itemValue)}
       >
-        <Picker.Item label="All Confections" value="" />
-        <Picker.Item label="Fresh" value="fresh" />
-        <Picker.Item label="Canned" value="canned" />
-        <Picker.Item label="Frozen" value="frozen" />
-        <Picker.Item label="Cured" value="cured" />
+        {Types.map((item) => (
+            <Picker.Item key={item.value} label={item.label} value={item.value} />
+          ))}
       </Picker>
 
       {/* Ingredients */}
@@ -207,7 +201,7 @@ const InfoIngredientsScreen: React.FC = () => {
 
             {/* Ingredient Info */}
             <ThemedText style={styles.itemText}>
-              {item.name} - {item.category} - {item.location} - {item.type}
+              {item.name} | {item.category} | {item.location} | {item.type}
             </ThemedText>
     
             {/* Icons on the right */}
@@ -238,11 +232,6 @@ const styles = StyleSheet.create({
     gap: 12,
     overflow: 'hidden',
   },
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
   buttonRow: { flexDirection: 'row', justifyContent: 'space-around'},
   button: { 
     backgroundColor: '#007bff', 
@@ -256,8 +245,17 @@ const styles = StyleSheet.create({
   activeButton: { backgroundColor: '#0056b3' },
   clearButton: { backgroundColor: '#dc3545' },
   clearButtonText: { color: 'white', fontSize: 16, fontWeight: 'bold', textAlign: 'center' },
-  label: { fontSize: 18, marginTop: 10, marginBottom: 5 },
-  picker: { backgroundColor: 'white', height: 50, borderWidth: 0.5, marginBottom: 10 },
+  label: { fontSize: 18, marginBottom: 8 },
+  picker: {
+    backgroundColor: "white",
+    height: 50,
+    paddingHorizontal: 10,
+    marginBottom: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    justifyContent: "center",
+  },
   item: {
     flexDirection: "row",
     alignItems: "center",

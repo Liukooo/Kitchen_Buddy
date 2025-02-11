@@ -2,19 +2,23 @@ import React, { useEffect, useState, useMemo } from "react";
 import {
   TextInput,
   Switch,
-  View,
   Image,
   Platform,
   StyleSheet,
   Alert,
   TouchableOpacity,
+  Modal,
+  View,
+  ActivityIndicator,
 } from "react-native";
+import { Picker } from "@react-native-picker/picker";
+import { Camera, CameraView } from "expo-camera";
+import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Categories, Locations, Types } from "@/constants/Options";
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { Picker } from "@react-native-picker/picker";
-import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface Ingredient {
   name: string;
@@ -47,6 +51,9 @@ const AddIngredientScreen: React.FC = () => {
   const [commonEstimate, setCommonEstimate] = useState("");
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+  const [scanning, setScanning] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const loadIngredients = async () => {
@@ -56,12 +63,77 @@ const AddIngredientScreen: React.FC = () => {
     loadIngredients();
   }, []);
 
+  useEffect(() => {
+    (async () => {
+      const { status } = await Camera.requestCameraPermissionsAsync();
+      setHasPermission(status === "granted");
+    })();
+  }, []);
+
+  // Handle Barcode Scan and Add Ingredient
+  const handleBarCodeScanned = async ({ data }: { data: string }) => {
+    // Disable scanning for multiple scans
+    setScanning(false);
+    // Show loading indicator
+    setLoading(true);
+    
+    try {
+      // Wait for API request
+      const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${data}.json`);
+      // Converts JSON into JS
+      const result = await response.json();
+  
+      if (result.status === 1) {
+        const ingredientName = result.product.product_name || "Unknown Product";
+  
+        // Save to state
+        setIngredientName(ingredientName);
+  
+        // Save to AsyncStorage
+        const newIngredient: Ingredient = {
+          name: ingredientName,
+          category: "",
+          location: "",
+          type: "",
+          expirationDate: "",
+          estimateDate: "", 
+        };
+  
+        // Load existing ingredients
+        const storedIngredients = await AsyncStorage.getItem("ingredients");
+        const ingredientsArray = storedIngredients ? JSON.parse(storedIngredients) : [];
+  
+        // Add new ingredient to list
+        const updatedIngredients = [...ingredientsArray, newIngredient];
+  
+        // Save updated list back to storage
+        await AsyncStorage.setItem("ingredients", JSON.stringify(updatedIngredients));
+  
+        // Show success alert
+        Alert.alert("Product Found!",
+          `Scanned: ${ingredientName}`,
+          [{ text: "OK", onPress: resetForm }]
+        )
+      } else {
+        // Show not found alert
+        Alert.alert("Error", "Product not found in OpenFoodFacts");
+      }
+    } catch (error) {
+      // Show error alert
+      Alert.alert("Error", "Failed to fetch product details.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Transforms Date into processable String
   const computedExpirationDate = useMemo(() => {
     return isExactDate
       ? expirationDate.toISOString().split("T")[0]
       : getEstimatedDate(commonEstimate);
   }, [isExactDate, expirationDate, commonEstimate]);
 
+  // Handle Add Ingredient 
   const handleAddIngredient = async () => {
     if (!ingredientName.trim()) {
       Alert.alert(
@@ -71,6 +143,7 @@ const AddIngredientScreen: React.FC = () => {
       return;
     }
 
+    // Save to AsyncStorage
     const newIngredient: Ingredient = {
       name: ingredientName,
       category,
@@ -131,30 +204,23 @@ const AddIngredientScreen: React.FC = () => {
 
         <ThemedText style={styles.label}>Category:</ThemedText>
         <Picker selectedValue={category} style={styles.picker} onValueChange={setCategory}>
-          <Picker.Item label="Select Category" value="" />
-          <Picker.Item label="Fruit" value="fruit" />
-          <Picker.Item label="Vegetable" value="vegetable" />
-          <Picker.Item label="Dairy" value="dairy" />
-          <Picker.Item label="Fish" value="fish" />
-          <Picker.Item label="Meat" value="meat" />
-          <Picker.Item label="Beverage" value="beverage" />
+          {Categories.map((item) => (
+            <Picker.Item key={item.value} label={item.label} value={item.value} />
+          ))}
         </Picker>
 
         <ThemedText style={styles.label}>Location:</ThemedText>
         <Picker selectedValue={location} style={styles.picker} onValueChange={setLocation}>
-          <Picker.Item label="Select Location" value="" />
-          <Picker.Item label="Fridge" value="fridge" />
-          <Picker.Item label="Freezer" value="freezer" />
-          <Picker.Item label="Pantry" value="pantry" />
+          {Locations.map((item) => (
+              <Picker.Item key={item.value} label={item.label} value={item.value} />
+            ))}
         </Picker>
 
         <ThemedText style={styles.label}>Confection Type:</ThemedText>
         <Picker selectedValue={confection} style={styles.picker} onValueChange={setConfection}>
-          <Picker.Item label="Select Confection Type" value="" />
-          <Picker.Item label="Fresh" value="fresh" />
-          <Picker.Item label="Canned" value="canned" />
-          <Picker.Item label="Frozen" value="frozen" />
-          <Picker.Item label="Cured" value="cured" />
+          {Types.map((item) => (
+              <Picker.Item key={item.value} label={item.label} value={item.value} />
+            ))}
         </Picker>
 
         <ThemedView style={styles.switchContainer}>
@@ -210,6 +276,40 @@ const AddIngredientScreen: React.FC = () => {
         <TouchableOpacity style={styles.addButton} onPress={handleAddIngredient}>
           <ThemedText style={styles.addButtonText}>Add Ingredient</ThemedText>
         </TouchableOpacity>
+
+        <TouchableOpacity style={styles.scanButton} onPress={() => setScanning(true)}>
+          <ThemedText style={styles.scanButtonText}>Scan Barcode</ThemedText>
+        </TouchableOpacity>
+
+        <Modal visible={scanning} animationType="slide" transparent>
+          <ThemedView style={styles.modalContainer}>
+            {hasPermission === false ? (
+              <ThemedText style={styles.permissionText}>
+                Camera permission is required to scan barcodes.
+              </ThemedText>
+            ) : (
+              <CameraView
+                style={styles.camera}
+                facing="back"
+                barcodeScannerSettings={{
+                  barcodeTypes: ["qr", "ean13", "ean8", "upc_a", "upc_e"]
+                }}
+                onBarcodeScanned={scanning ? handleBarCodeScanned : undefined}
+              >
+                <TouchableOpacity style={styles.closeButton} onPress={() => setScanning(false)}>
+                  <ThemedText style={styles.closeButtonText}>Close Scanner</ThemedText>
+                </TouchableOpacity>
+              </CameraView>
+            )}
+          </ThemedView>
+        </Modal>
+
+        {loading && (
+          <ThemedView style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#28a745" />
+            <ThemedText>Fetching Product Details...</ThemedText>
+          </ThemedView>
+        )}
       </ThemedView>
     </ParallaxScrollView>
   );
@@ -261,6 +361,37 @@ const styles = StyleSheet.create({
   dateButtonText: { color: "white", fontSize: 16, fontWeight: "bold" },
   addButton: { backgroundColor: "#28a745", padding: 12, borderRadius: 5, alignItems: "center", marginTop: 10 },
   addButtonText: { color: "white", fontSize: 16, fontWeight: "bold" },
+  scanButton: {
+    backgroundColor: "#007bff",
+    padding: 12,
+    borderRadius: 5,
+    alignItems: "center",
+    marginTop: 10,
+  },
+  scanButtonText: { color: "white", fontSize: 16, fontWeight: "bold" },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 1)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  permissionText: { color: "white", fontSize: 18, textAlign: "center", marginBottom: 20 },
+  camera: {
+    width: "100%",
+    height: "80%",
+    justifyContent: "flex-end",
+  },
+  closeButton: {
+    position: "absolute",
+    bottom: 50,
+    backgroundColor: "red",
+    padding: 10,
+    borderRadius: 5,
+  },
+  closeButtonText: { color: "white", fontSize: 16 },
+  loadingContainer: {
+    alignItems: "center",
+  },
 });
 
 export default AddIngredientScreen;

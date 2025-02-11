@@ -7,6 +7,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { Ingredient } from '@/scripts/ingredientQueries';
+import { Categories, Locations, Types } from '@/constants/Options';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 
 // Define navigation type
@@ -75,13 +76,9 @@ const ModifyIngredientScreen: React.FC = () => {
         style={styles.picker}
         onValueChange={(itemValue) => setModifiedIngredient({ ...modifiedIngredient, category: itemValue })}
       >
-        <Picker.Item label="Select Category" value="" />
-        <Picker.Item label="Fruit" value="fruit" />
-        <Picker.Item label="Vegetable" value="vegetable" />
-        <Picker.Item label="Dairy" value="dairy" />
-        <Picker.Item label="Fish" value="fish" />
-        <Picker.Item label="Meat" value="meat" />
-        <Picker.Item label="Beverage" value="beverage" />
+        {Categories.map((item) => (
+            <Picker.Item key={item.value} label={item.label} value={item.value} />
+          ))}
       </Picker>
 
       {/* Location */}
@@ -90,25 +87,23 @@ const ModifyIngredientScreen: React.FC = () => {
         style={styles.picker}
         onValueChange={(itemValue) => setModifiedIngredient({ ...modifiedIngredient, location: itemValue })}
       >
-        <Picker.Item label="Select Location" value="" />
-        <Picker.Item label="Fridge" value="fridge" />
-        <Picker.Item label="Freezer" value="freezer" />
-        <Picker.Item label="Pantry" value="pantry" />
+        {Locations.map((item) => (
+            <Picker.Item key={item.value} label={item.label} value={item.value} />
+          ))}
       </Picker>
 
-      {/* Type */}
+      {/* Confection Type */}
       <Picker
         selectedValue={modifiedIngredient.type}
         style={styles.picker}
         onValueChange={(itemValue) => setModifiedIngredient({ ...modifiedIngredient, type: itemValue })}
       >
-        <Picker.Item label="Select Confection Type" value="" />
-        <Picker.Item label="Fresh" value="fresh" />
-        <Picker.Item label="Canned" value="canned" />
-        <Picker.Item label="Frozen" value="frozen" />
-        <Picker.Item label="Cured" value="cured" />
+        {Types.map((item) => (
+            <Picker.Item key={item.value} label={item.label} value={item.value} />
+          ))}
       </Picker>
 
+      {/* Date Selection */}
       <>
         <TouchableOpacity
           style={styles.dateButton}
