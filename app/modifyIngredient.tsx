@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import {
   Alert,
+  Switch,
   TextInput,
   TouchableOpacity
 } from 'react-native';
@@ -10,7 +11,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 
 // Local imports
 import { ThemedText } from '@/components/ThemedText';
@@ -18,6 +18,8 @@ import { ThemedView } from '@/components/ThemedView';
 import { Ingredient } from '@/constants/Ingredient';
 import { styles } from "@/components/ui/Styles";
 import { Categories, Locations, Types } from '@/constants/Options';
+import DatePicker from '@/components/DatePicker';
+import { getEstimatedDate } from '@/scripts/Functions';
 
 
 // Define navigation type
@@ -33,19 +35,11 @@ const ModifyIngredientScreen: React.FC = () => {
   const { ingredient } = route.params as { ingredient: Ingredient };
 
   const [modifiedIngredient, setModifiedIngredient] = useState<Ingredient>({ ...ingredient });
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [expirationDate, setExpirationDate] = useState(new Date(ingredient.expirationDate));
-
-  // Handles the Date selection in the DataTimePicker
-  const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    if (event.type === "dismissed") return setShowDatePicker(false);
-    if (selectedDate) {
-      setExpirationDate(selectedDate);
-      const formattedDate = selectedDate.toISOString().split('T')[0]; // Keep only YYYY-MM-DD
-      setModifiedIngredient({ ...modifiedIngredient, expirationDate: formattedDate });
-    }
-    setShowDatePicker(false);
-  };
+  const [isExactDate, setIsExactDate] = useState(!!ingredient.expirationDate);
+  const [commonEstimate, setCommonEstimate] = useState(ingredient.expirationDate || "");
+  const [expirationDate, setExpirationDate] = useState(
+    ingredient.expirationDate ? new Date(ingredient.expirationDate) : new Date()
+  );
 
   // Handles Button Save Changes
   const handleSaveChanges = async () => {
@@ -53,8 +47,13 @@ const ModifyIngredientScreen: React.FC = () => {
       const storedIngredients = await AsyncStorage.getItem('ingredients');
       let ingredients: Ingredient[] = storedIngredients ? JSON.parse(storedIngredients) : [];
       
+      const updatedIngredient = {
+        ...modifiedIngredient,
+        expirationDate: isExactDate ? expirationDate.toISOString().split("T")[0] : getEstimatedDate(commonEstimate),
+      };
+
       const updatedIngredients = ingredients.map((item) => 
-        item.name === ingredient.name ? modifiedIngredient : item
+        item.name === ingredient.name ? updatedIngredient : item
       );
       
       await AsyncStorage.setItem('ingredients', JSON.stringify(updatedIngredients));
@@ -126,23 +125,34 @@ const ModifyIngredientScreen: React.FC = () => {
           ))}
       </Picker>
 
+      {/* Switch for Exact Date */}
+      <ThemedView style={styles.switchContainer}>
+        <ThemedText>Exact Date</ThemedText>
+        <Switch value={isExactDate} onValueChange={setIsExactDate} trackColor={{ false: "#ccc", true: "#81b0ff" }}/>
+      </ThemedView>
+
       {/* Date Selection */}
-      <>
-        <TouchableOpacity
-          style={styles.dateButton}
-          onPress={() => setShowDatePicker(true)}
-        >
-          <ThemedText style={styles.buttonText}>Pick Expiration Date</ThemedText>
-        </TouchableOpacity>
-        {showDatePicker && (
-          <DateTimePicker
-            value={expirationDate}
-            mode="date"
-            display="default"
-            onChange={handleDateChange}
+      {isExactDate ? (
+          <DatePicker 
+            date={expirationDate} 
+            onDateChange={setExpirationDate}
           />
+        ) : (
+          <>
+            <ThemedText type="label">Estimated Expiration:</ThemedText>
+            <Picker 
+              selectedValue={commonEstimate} 
+              style={styles.picker} 
+              onValueChange={setCommonEstimate}
+            >
+              <Picker.Item label="Select Date" value="" />
+              <Picker.Item label="2 days from now" value="2 days" />
+              <Picker.Item label="1 week from now" value="1 week" />
+              <Picker.Item label="10 days from now" value="10 days" />
+              <Picker.Item label="1 month from now" value="1 month" />
+            </Picker>
+          </>
         )}
-      </>
 
       {/* Buttons */}
       <ThemedView style={styles.buttonContainer}>

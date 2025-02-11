@@ -36,9 +36,9 @@ Complete:
 - Barcode scanning: the application uses Expo's BarCodeScanner API to read barcodes. It can then query OpenFoodFacts, and if succesful, it retrieves data about the item automatically.
 - Brand: some items can have brands, in addition to names.
 
+Incomplete:
 - Ripeness: fresh ingredients have a ripeness or maturity status (e.g., green, ripe/mature, advanced, too ripe). This maturity status can be edited, and the date when it was edited is stored (something ripe a week ago might not be good anymore!).
 - Frozen: fresh ingredients can be frozen. This also extend their expiration date to be at least 6 months.
 - Open: some ingredients last only a short time after being opened (e.g., a yogurt) When an ingredient is set as open, their expiry date can be changed to account for this.
-
 - Items that have a ripeness status need to be checked regularly. If the last check was more than 3 days ago, they are added.
 - Items that are ripe, and open items, are added to the "expiring soon" query; items that are frozen are removed from it (unless their new expiry date is coming up)

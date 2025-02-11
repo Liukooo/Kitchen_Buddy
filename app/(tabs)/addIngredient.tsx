@@ -5,7 +5,6 @@ import {
   Alert,
   Image,
   Modal,
-  Platform,
   Switch,
   TextInput,
   TouchableOpacity,
@@ -14,16 +13,17 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Picker } from "@react-native-picker/picker";
 import { Camera, CameraView } from "expo-camera";
-import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 
 // Local imports
 import { Categories, Locations, Types } from "@/constants/Options";
 import { Ingredient } from "@/constants/Ingredient";
 import { getEstimatedDate } from "@/scripts/Functions";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
+import DatePicker from "@/components/DatePicker";
 import { styles } from "@/components/ui/Styles";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+
 
 const AddIngredientScreen: React.FC = () => {
   const [ingredientName, setIngredientName] = useState("");
@@ -35,7 +35,6 @@ const AddIngredientScreen: React.FC = () => {
   const [expirationDate, setExpirationDate] = useState(new Date());
   const [commonEstimate, setCommonEstimate] = useState("");
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [scanning, setScanning] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -75,13 +74,6 @@ const AddIngredientScreen: React.FC = () => {
       setHasPermission(status === "granted");
     })();
   }, []);
-
-  // Handles the Date selection in the DataTimePicker
-  const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    if (event.type === "dismissed") return setShowDatePicker(false);
-    if (selectedDate) setExpirationDate(selectedDate);
-    setShowDatePicker(false);
-  };
   
   // Handles Add Ingredient 
   const handleAddIngredient = async () => {
@@ -101,7 +93,6 @@ const AddIngredientScreen: React.FC = () => {
       location,
       type: confection,
       expirationDate: computedExpirationDate,
-      estimateDate: commonEstimate,
     };
 
     const updatedIngredients = [...ingredients, newIngredient];
@@ -142,7 +133,6 @@ const AddIngredientScreen: React.FC = () => {
           location: "",
           type: "",
           expirationDate: "",
-          estimateDate: "", 
         };
   
         // Loads existing ingredients
@@ -229,42 +219,12 @@ const AddIngredientScreen: React.FC = () => {
         {/* Switch for Exact Date */}
         <ThemedView style={styles.switchContainer}>
           <ThemedText>Exact Date</ThemedText>
-          <Switch value={isExactDate} onValueChange={setIsExactDate} trackColor={{ false: "#ffffff88", true: "#81b0ff" }}/>
+          <Switch value={isExactDate} onValueChange={setIsExactDate} trackColor={{ false: "#ccc", true: "#81b0ff" }}/>
         </ThemedView>
 
         {/* Exact Date or Estimated Date*/}
         {isExactDate ? (
-          Platform.OS === "web" ? (
-            <>
-              <ThemedText style={styles.label}>Select a date:</ThemedText>
-              <TextInput
-                style={styles.input}
-                value={computedExpirationDate}
-                onChangeText={(text) => {
-                  const parsedDate = new Date(text);
-                  if (!isNaN(parsedDate.getTime())) setExpirationDate(parsedDate);
-                }}
-                placeholder="YYYY-MM-DD"
-              />
-            </>
-          ) : (
-            <>
-              <TouchableOpacity
-                style={styles.dateButton}
-                onPress={() => setShowDatePicker(true)}
-              >
-                <ThemedText style={styles.buttonText}>Pick Date</ThemedText>
-              </TouchableOpacity>
-              {showDatePicker && (
-                <DateTimePicker
-                  value={expirationDate}
-                  mode="date"
-                  display="default"
-                  onChange={handleDateChange}
-                />
-              )}
-            </>
-          )
+          <DatePicker date={expirationDate} onDateChange={setExpirationDate} />
         ) : (
           <>
             <ThemedText type="label">Estimated Expiration:</ThemedText>

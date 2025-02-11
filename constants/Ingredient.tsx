@@ -5,5 +5,4 @@ export interface Ingredient {
     location?: string;
     type?: string;
     expirationDate: string; // Stored as YYYY-MM-DD
-    estimateDate?: string;
   }
