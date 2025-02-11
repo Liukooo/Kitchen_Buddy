@@ -25,26 +25,20 @@ In the output, you'll find options to open the app in a
 
 You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
-## Get a fresh project
+3. Tasks
 
-When you're ready, run:
+### Ingredient handling
 
-```bash
-npm run reset-project
-```
+The application is extended with additional functionality and ingredient data.
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Complete:
+- Persistence: the application's data persists accross execution.
+- Barcode scanning: the application uses Expo's BarCodeScanner API to read barcodes. It can then query OpenFoodFacts, and if succesful, it retrieves data about the item automatically.
+- Brand: some items can have brands, in addition to names.
 
-## Learn more
+- Ripeness: fresh ingredients have a ripeness or maturity status (e.g., green, ripe/mature, advanced, too ripe). This maturity status can be edited, and the date when it was edited is stored (something ripe a week ago might not be good anymore!).
+- Frozen: fresh ingredients can be frozen. This also extend their expiration date to be at least 6 months.
+- Open: some ingredients last only a short time after being opened (e.g., a yogurt) When an ingredient is set as open, their expiry date can be changed to account for this.
 
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- Items that have a ripeness status need to be checked regularly. If the last check was more than 3 days ago, they are added.
+- Items that are ripe, and open items, are added to the "expiring soon" query; items that are frozen are removed from it (unless their new expiry date is coming up)

@@ -1,14 +1,24 @@
 import React, { useState } from 'react';
-import { TextInput, TouchableOpacity, Alert, StyleSheet, StatusBar } from 'react-native';
+
+import {
+  Alert,
+  TextInput,
+  TouchableOpacity
+} from 'react-native';
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import { ThemedView } from '@/components/ThemedView';
+
+// Local imports
 import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
 import { Ingredient } from '@/constants/Ingredient';
+import { styles } from "@/components/ui/Styles";
 import { Categories, Locations, Types } from '@/constants/Options';
+
 
 // Define navigation type
 type RootStackParamList = {
@@ -75,6 +85,14 @@ const ModifyIngredientScreen: React.FC = () => {
         placeholder="Ingredient Name"
       />
 
+      {/* Brand */}
+      <TextInput
+        style={styles.input}
+        value={modifiedIngredient.brand}
+        onChangeText={(itemValue) => setModifiedIngredient({ ...modifiedIngredient, brand: itemValue })}
+        placeholder="Brand Name"
+      />
+
       {/* Category */}
       <Picker
         selectedValue={modifiedIngredient.category}
@@ -114,7 +132,7 @@ const ModifyIngredientScreen: React.FC = () => {
           style={styles.dateButton}
           onPress={() => setShowDatePicker(true)}
         >
-          <ThemedText style={styles.dateButtonText}>Pick Expiration Date</ThemedText>
+          <ThemedText style={styles.buttonText}>Pick Expiration Date</ThemedText>
         </TouchableOpacity>
         {showDatePicker && (
           <DateTimePicker
@@ -138,59 +156,5 @@ const ModifyIngredientScreen: React.FC = () => {
     </ThemedView>
   );
 };
-
-
-const styles = StyleSheet.create({
-  container: {
-    paddingTop: StatusBar.currentHeight || 0,
-    flex: 1,
-    padding: 20,
-    gap: 12,
-  },
-  input: {
-    backgroundColor: "white",
-    height: 50,
-    paddingHorizontal: 10,
-    marginTop: 10,
-    marginBottom: 10,
-    color: "black",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#ccc",
-  },
-  picker: {
-    height: 50,
-    backgroundColor: 'white',
-    marginBottom: 10,
-  },
-  dateButton: { backgroundColor: "#007bff", padding: 12, borderRadius: 5, alignItems: "center", marginBottom: 16 },
-  dateButtonText: { color: "white", fontSize: 16, fontWeight: "bold" },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: 20,
-  },
-  saveButton: {
-    backgroundColor: '#28a745',
-    padding: 12,
-    borderRadius: 5,
-    flex: 1,
-    marginHorizontal: 5,
-    alignItems: 'center',
-  },
-  discardButton: {
-    backgroundColor: '#dc3545',
-    padding: 12,
-    borderRadius: 5,
-    flex: 1,
-    marginHorizontal: 5,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-});
 
 export default ModifyIngredientScreen;

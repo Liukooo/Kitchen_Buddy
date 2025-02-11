@@ -1,3 +1,4 @@
+// Local imports
 import { Ingredient } from "@/constants/Ingredient";
   
 // Transform Estimated Date of Exiration into a operable String

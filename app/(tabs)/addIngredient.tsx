@@ -1,28 +1,33 @@
 import React, { useEffect, useState, useMemo } from "react";
+
 import {
-  TextInput,
-  Switch,
-  Image,
-  Platform,
-  StyleSheet,
-  Alert,
-  TouchableOpacity,
-  Modal,
   ActivityIndicator,
+  Alert,
+  Image,
+  Modal,
+  Platform,
+  Switch,
+  TextInput,
+  TouchableOpacity,
 } from "react-native";
+
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Picker } from "@react-native-picker/picker";
 import { Camera, CameraView } from "expo-camera";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+
+// Local imports
 import { Categories, Locations, Types } from "@/constants/Options";
-import { Ingredient } from '@/constants/Ingredient';
-import { getEstimatedDate } from '@/scripts/ingredientQueries';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import { Ingredient } from "@/constants/Ingredient";
+import { getEstimatedDate } from "@/scripts/Functions";
+import ParallaxScrollView from "@/components/ParallaxScrollView";
+import { styles } from "@/components/ui/Styles";
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
 
 const AddIngredientScreen: React.FC = () => {
   const [ingredientName, setIngredientName] = useState("");
+  const [brand, setBrand] = useState("");
   const [category, setCategory] = useState("");
   const [location, setLocation] = useState("");
   const [confection, setConfection] = useState("");
@@ -45,6 +50,7 @@ const AddIngredientScreen: React.FC = () => {
   // Resets the form
   const resetForm = () => {
     setIngredientName("");
+    setBrand("");
     setCategory("");
     setLocation("");
     setConfection("");
@@ -90,6 +96,7 @@ const AddIngredientScreen: React.FC = () => {
     // Saves to AsyncStorage
     const newIngredient: Ingredient = {
       name: ingredientName,
+      brand,
       category,
       location,
       type: confection,
@@ -103,7 +110,7 @@ const AddIngredientScreen: React.FC = () => {
 
     Alert.alert(
       "Ingredient Added ✅",
-      `Name: ${newIngredient.name}\nCategory: ${newIngredient.category}\nLocation: ${newIngredient.location}\nType: ${newIngredient.type}\nExpiration Date: ${newIngredient.expirationDate}`,
+      `Name: ${newIngredient.name}\nBrand: ${newIngredient.brand}\nCategory: ${newIngredient.category}\nLocation: ${newIngredient.location}\nType: ${newIngredient.type}\nExpiration Date: ${newIngredient.expirationDate}`,
       [{ text: "OK", onPress: resetForm }]
     )
   };
@@ -130,6 +137,7 @@ const AddIngredientScreen: React.FC = () => {
         // Saves to AsyncStorage
         const newIngredient: Ingredient = {
           name: ingredientName,
+          brand: "",
           category: "",
           location: "",
           type: "",
@@ -174,23 +182,28 @@ const AddIngredientScreen: React.FC = () => {
         />
       }>
       {/* Title */}
-      <ThemedView style={styles.titleContainer}>
         <ThemedText type="title">Add an Ingredient to the Fridge</ThemedText>
-      </ThemedView>
-
       
       <ThemedView style={styles.container}>
         {/* Name */}
-        <ThemedText style={styles.label}>Ingredient Name:</ThemedText>
+        <ThemedText type="label">Ingredient Name:</ThemedText>
         <TextInput
           style={styles.input}
           value={ingredientName}
           onChangeText={setIngredientName}
           placeholder="Enter Ingredient Name"
         />
+        {/* Brand */}
+        <ThemedText type="label">Brand Name:</ThemedText>
+        <TextInput
+          style={styles.input}
+          value={brand}
+          onChangeText={setBrand}
+          placeholder="Enter Brand (optional)"
+        />
 
         {/* Category */}
-        <ThemedText style={styles.label}>Category:</ThemedText>
+        <ThemedText type="label">Category:</ThemedText>
         <Picker selectedValue={category} style={styles.picker} onValueChange={setCategory}>
           {Categories.map((item) => (
             <Picker.Item key={item.value} label={item.label} value={item.value} />
@@ -198,7 +211,7 @@ const AddIngredientScreen: React.FC = () => {
         </Picker>
 
         {/* Location */}
-        <ThemedText style={styles.label}>Location:</ThemedText>
+        <ThemedText type="label">Location:</ThemedText>
         <Picker selectedValue={location} style={styles.picker} onValueChange={setLocation}>
           {Locations.map((item) => (
               <Picker.Item key={item.value} label={item.label} value={item.value} />
@@ -240,7 +253,7 @@ const AddIngredientScreen: React.FC = () => {
                 style={styles.dateButton}
                 onPress={() => setShowDatePicker(true)}
               >
-                <ThemedText style={styles.dateButtonText}>Pick Date</ThemedText>
+                <ThemedText style={styles.buttonText}>Pick Date</ThemedText>
               </TouchableOpacity>
               {showDatePicker && (
                 <DateTimePicker
@@ -254,7 +267,7 @@ const AddIngredientScreen: React.FC = () => {
           )
         ) : (
           <>
-            <ThemedText style={styles.label}>Estimated Expiration:</ThemedText>
+            <ThemedText type="label">Estimated Expiration:</ThemedText>
             <Picker selectedValue={commonEstimate} style={styles.picker} onValueChange={setCommonEstimate}>
               <Picker.Item label="Select Date" value="" />
               <Picker.Item label="2 days from now" value="2 days" />
@@ -267,18 +280,18 @@ const AddIngredientScreen: React.FC = () => {
 
         {/* Add Button */}
         <TouchableOpacity style={styles.addButton} onPress={handleAddIngredient}>
-          <ThemedText style={styles.addButtonText}>Add Ingredient</ThemedText>
+          <ThemedText style={styles.buttonText}>Add Ingredient</ThemedText>
         </TouchableOpacity>
 
         {/* Barcode Button */}
         <TouchableOpacity style={styles.scanButton} onPress={() => setScanning(true)}>
-          <ThemedText style={styles.scanButtonText}>Scan Barcode</ThemedText>
+          <ThemedText style={styles.buttonText}>Scan Barcode</ThemedText>
         </TouchableOpacity>
 
         <Modal visible={scanning} animationType="slide" transparent>
           <ThemedView style={styles.modalContainer}>
             {hasPermission === false ? (
-              <ThemedText style={styles.permissionText}>
+              <ThemedText style={styles.buttonText}>
                 Camera permission is required to scan barcodes.
               </ThemedText>
             ) : (
@@ -291,7 +304,7 @@ const AddIngredientScreen: React.FC = () => {
                 onBarcodeScanned={scanning ? handleBarCodeScanned : undefined}
               >
                 <TouchableOpacity style={styles.closeButton} onPress={() => setScanning(false)}>
-                  <ThemedText style={styles.closeButtonText}>Close Scanner</ThemedText>
+                  <ThemedText style={styles.buttonText}>Close Scanner</ThemedText>
                 </TouchableOpacity>
               </CameraView>
             )}
@@ -308,84 +321,5 @@ const AddIngredientScreen: React.FC = () => {
     </ParallaxScrollView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: { 
-    flex: 1,
-    gap:4,
-    padding: 16
-  },
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  image: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    width: "100%",
-    height: "100%",
-  },
-  label: { fontSize: 18, marginBottom: 8 },
-  input: {
-    backgroundColor: "white",
-    height: 50,
-    paddingHorizontal: 10,
-    marginBottom: 16,
-    color: "black",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#ccc",
-  },
-  picker: {
-    backgroundColor: "white",
-    height: 50,
-    paddingHorizontal: 10,
-    marginBottom: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    justifyContent: "center",
-},
-  switchContainer: { flexDirection: "row", alignItems: "center", marginBottom: 16 },
-  dateButton: { backgroundColor: "#007bff", padding: 12, borderRadius: 5, alignItems: "center", marginBottom: 16 },
-  dateButtonText: { color: "white", fontSize: 16, fontWeight: "bold" },
-  addButton: { backgroundColor: "#28a745", padding: 12, borderRadius: 5, alignItems: "center", marginTop: 10 },
-  addButtonText: { color: "white", fontSize: 16, fontWeight: "bold" },
-  scanButton: {
-    backgroundColor: "#007bff",
-    padding: 12,
-    borderRadius: 5,
-    alignItems: "center",
-    marginTop: 10,
-  },
-  scanButtonText: { color: "white", fontSize: 16, fontWeight: "bold" },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 1)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  permissionText: { color: "white", fontSize: 18, textAlign: "center", marginBottom: 20 },
-  camera: {
-    width: "100%",
-    height: "80%",
-    justifyContent: "flex-end",
-  },
-  closeButton: {
-    position: "absolute",
-    bottom: 50,
-    backgroundColor: "red",
-    padding: 10,
-    borderRadius: 5,
-  },
-  closeButtonText: { color: "white", fontSize: 16 },
-  loadingContainer: {
-    alignItems: "center",
-  },
-});
 
 export default AddIngredientScreen;

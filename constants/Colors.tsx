@@ -1,6 +1,6 @@
 //Below are the colors that are used in the app. The colors are defined in the light and dark mode.
 
-const tintColorLight = '#0a7ea4';
+const tintColorLight = '#007bff';
 const tintColorDark = '#fff';
 
 export const Colors = {
@@ -21,3 +21,15 @@ export const Colors = {
     tabIconSelected: tintColorDark,
   },
 };
+
+export const Theme = {
+  primary: '#007bff',
+  secondary: '#0056b3',
+  success: '#28a745',
+  danger: '#dc3545',
+  white: '#ffffff',
+  black: '#000000',
+  gray: '#ccc',
+  link: '#0a7ea4',
+};
+

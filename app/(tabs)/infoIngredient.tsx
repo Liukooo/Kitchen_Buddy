@@ -1,20 +1,29 @@
 import React, { useEffect, useState } from 'react';
-import { FlatList, TouchableOpacity, Alert, StyleSheet, StatusBar } from 'react-native';
+
+import {
+  Alert,
+  FlatList,
+  TouchableOpacity
+} from 'react-native';
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
-import { IconSymbol } from "@/components/ui/IconSymbol";
-import {
-  getMissingData,
-  getRecentlyAdded,
-  getByCategoryOrConfection,
-  getByLocation
-} from '@/scripts/ingredientQueries';
-import { Ingredient } from '@/constants/Ingredient';
-import { ThemedView } from '@/components/ThemedView';
-import { ThemedText } from '@/components/ThemedText';
-import { Categories, Locations, Types} from '@/constants/Options';
-import { useNavigation, useFocusEffect  } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import type { StackNavigationProp } from "@react-navigation/stack";
+
+// Local imports
+import { IconSymbol } from "@/components/ui/IconSymbol";
+import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
+import { styles } from "@/components/ui/Styles";
+import { Ingredient } from '@/constants/Ingredient';
+import { Categories, Locations, Types } from '@/constants/Options';
+import {
+  getByCategoryOrConfection,
+  getByLocation,
+  getMissingData,
+  getRecentlyAdded
+} from '@/scripts/Functions';
 
 // Defines navigation type
 type RootStackParamList = {
@@ -127,157 +136,105 @@ const InfoIngredientsScreen: React.FC = () => {
   return (
     <ThemedView style={styles.container}>
       {/* Title */}
-      <ThemedView>
         <ThemedText type="title">Explore Ingredients</ThemedText>
-      </ThemedView>
       {/* Buttons */}
-      <ThemedView style={styles.buttonRow}>
+      <ThemedView style={styles.content}>
+        <ThemedView style={styles.buttonContainer}>
 
-        {/* Recently */}
-        <TouchableOpacity
-          style={[styles.button, activeFilter === 'recent' && styles.activeButton]}
-          onPress={() => setActiveFilter('recent')}
-          activeOpacity={0.7}
+          {/* Recently */}
+          <TouchableOpacity
+            style={[styles.button, activeFilter === 'recent' && styles.activeButton]}
+            onPress={() => setActiveFilter('recent')}
+            activeOpacity={0.7}
+          >
+            <ThemedText style={styles.buttonText}>Recently Added</ThemedText>
+          </TouchableOpacity>
+
+          {/* Missing */}
+          <TouchableOpacity
+            style={[styles.button, activeFilter === 'missing' && styles.activeButton]}
+            onPress={() => setActiveFilter('missing')}
+            activeOpacity={0.7}
+          >
+            <ThemedText style={styles.buttonText}>Missing Data</ThemedText>
+          </TouchableOpacity>
+
+          {/* Reset */}
+          <TouchableOpacity
+            style={[styles.button, styles.clearButton]}
+            onPress={clearFilters}
+            activeOpacity={0.7}
+          >
+            <ThemedText style={styles.buttonText}>Clear Filters</ThemedText>
+          </TouchableOpacity>
+        </ThemedView>
+
+        {/* Category */}
+        <ThemedText type="label">Category:</ThemedText>
+        <Picker
+          selectedValue={selectedCategory}
+          style={styles.picker}
+          onValueChange={(itemValue) => setSelectedCategory(itemValue)}
         >
-          <ThemedText style={styles.buttonText}>Recently Added</ThemedText>
-        </TouchableOpacity>
+          {Categories.map((item) => (
+              <Picker.Item key={item.value} label={item.label} value={item.value} />
+            ))}
+        </Picker>
 
-        {/* Missing */}
-        <TouchableOpacity
-          style={[styles.button, activeFilter === 'missing' && styles.activeButton]}
-          onPress={() => setActiveFilter('missing')}
-          activeOpacity={0.7}
+        {/* Location */}
+        <ThemedText type="label">Location:</ThemedText>
+        <Picker
+          selectedValue={selectedLocation}
+          style={styles.picker}
+          onValueChange={(itemValue) => setSelectedLocation(itemValue)}
         >
-          <ThemedText style={styles.buttonText}>Missing Data</ThemedText>
-        </TouchableOpacity>
+          {Locations.map((item) => (
+              <Picker.Item key={item.value} label={item.label} value={item.value} />
+            ))}
+        </Picker>
 
-        {/* Reset */}
-        <TouchableOpacity
-          style={[styles.button, styles.clearButton]}
-          onPress={clearFilters}
-          activeOpacity={0.7}
+        {/* Confection Type */}
+        <ThemedText type="label">Confection Type:</ThemedText>
+        <Picker
+          selectedValue={selectedConfection}
+          style={styles.picker}
+          onValueChange={(itemValue) => setSelectedConfection(itemValue)}
         >
-          <ThemedText style={styles.clearButtonText}>Clear Filters</ThemedText>
-        </TouchableOpacity>
-      </ThemedView>
+          {Types.map((item) => (
+              <Picker.Item key={item.value} label={item.label} value={item.value} />
+            ))}
+        </Picker>
 
-      {/* Category */}
-      <ThemedText style={styles.label}>Category:</ThemedText>
-      <Picker
-        selectedValue={selectedCategory}
-        style={styles.picker}
-        onValueChange={(itemValue) => setSelectedCategory(itemValue)}
-      >
-        {Categories.map((item) => (
-            <Picker.Item key={item.value} label={item.label} value={item.value} />
-          ))}
-      </Picker>
+        {/* Ingredients */}
+        <FlatList
+          data={filteredIngredients}
+          keyExtractor={(item, index) => `${item.name}-${index}`}
+          renderItem={({ item }) => (
+            <ThemedView style={styles.item}>
 
-      {/* Location */}
-      <ThemedText style={styles.label}>Location:</ThemedText>
-      <Picker
-        selectedValue={selectedLocation}
-        style={styles.picker}
-        onValueChange={(itemValue) => setSelectedLocation(itemValue)}
-      >
-        {Locations.map((item) => (
-            <Picker.Item key={item.value} label={item.label} value={item.value} />
-          ))}
-      </Picker>
-
-      {/* Confection Type */}
-      <ThemedText style={styles.label}>Confection Type:</ThemedText>
-      <Picker
-        selectedValue={selectedConfection}
-        style={styles.picker}
-        onValueChange={(itemValue) => setSelectedConfection(itemValue)}
-      >
-        {Types.map((item) => (
-            <Picker.Item key={item.value} label={item.label} value={item.value} />
-          ))}
-      </Picker>
-
-      {/* Ingredients */}
-      <FlatList
-        data={filteredIngredients}
-        keyExtractor={(item, index) => `${item.name}-${index}`}
-        renderItem={({ item }) => (
-          <ThemedView style={styles.item}>
-
-            {/* Ingredient Info */}
-            <ThemedText style={styles.itemText}>
-              {item.name} | {item.category} | {item.location} | {item.type}
-            </ThemedText>
-    
-            {/* Icons on the right */}
-            <ThemedView style={styles.iconContainer}>
-              {/* Modify Icon */}
-              <TouchableOpacity onPress={() => handleEditIngredient(item)}>
-                <IconSymbol name="pencil" size={20} color="#007bff" style={styles.icon} />
-              </TouchableOpacity>
-    
-              {/* Delete Icon */}
-              <TouchableOpacity onPress={() => handleDeleteIngredient(item)}>
-                <IconSymbol name="trash" size={20} color="#dc3545" style={styles.icon} />
-              </TouchableOpacity>
+              {/* Ingredient Info */}
+              <ThemedText style={styles.itemText}>
+                {item.name} | {item.category} | {item.location} | {item.type}
+              </ThemedText>
+      
+              {/* Icons on the right */}
+              <ThemedView style={styles.iconContainer}>
+                {/* Modify Icon */}
+                <TouchableOpacity onPress={() => handleEditIngredient(item)}>
+                  <IconSymbol name="pencil" size={20} color="#007bff" style={styles.icon} />
+                </TouchableOpacity>
+      
+                {/* Delete Icon */}
+                <TouchableOpacity onPress={() => handleDeleteIngredient(item)}>
+                  <IconSymbol name="trash" size={20} color="#dc3545" style={styles.icon} />
+                </TouchableOpacity>
+              </ThemedView>
             </ThemedView>
-          </ThemedView>
-        )}
-      />
+          )}
+        />
+      </ThemedView>
     </ThemedView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    paddingTop: StatusBar.currentHeight || 0,
-    flex: 1,
-    padding: 32,
-    gap: 12,
-    overflow: 'hidden',
-  },
-  buttonRow: { flexDirection: 'row', justifyContent: 'space-around'},
-  button: { 
-    backgroundColor: '#007bff', 
-    padding: 12, 
-    borderRadius: 5, 
-    alignItems: 'center', 
-    flex: 1, 
-    marginHorizontal: 5 
-  },
-  buttonText: { color: 'white', fontSize: 16, fontWeight: 'bold', textAlign: 'center' },
-  activeButton: { backgroundColor: '#0056b3' },
-  clearButton: { backgroundColor: '#dc3545' },
-  clearButtonText: { color: 'white', fontSize: 16, fontWeight: 'bold', textAlign: 'center' },
-  label: { fontSize: 18, marginBottom: 8 },
-  picker: {
-    backgroundColor: "white",
-    height: 50,
-    paddingHorizontal: 10,
-    marginBottom: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    justifyContent: "center",
-  },
-  item: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
-  },
-  iconContainer: {
-    flexDirection: "row",
-    marginRight: 10,
-  },
-  icon: {
-    marginHorizontal: 5,
-  },
-  itemText: {
-    fontSize: 16,
-    flex: 1,
-  },
-});
 
 export default InfoIngredientsScreen;
