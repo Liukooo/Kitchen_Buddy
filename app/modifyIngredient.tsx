@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, Alert, StyleSheet, StatusBar } from 'react-native';
+import { TextInput, TouchableOpacity, Alert, StyleSheet, StatusBar } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
-import { ThemedView } from '@/components/ThemedView';
-import { ThemedText } from '@/components/ThemedText';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import { ThemedView } from '@/components/ThemedView';
+import { ThemedText } from '@/components/ThemedText';
 import { Ingredient } from '@/constants/Ingredient';
 import { Categories, Locations, Types } from '@/constants/Options';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 
 // Define navigation type
 type RootStackParamList = {
@@ -16,7 +16,9 @@ type RootStackParamList = {
 };
 
 const ModifyIngredientScreen: React.FC = () => {
+  // Defines navigation props
   const navigation = useNavigation<StackNavigationProp<RootStackParamList, 'modifyIngredient'>>();
+
   const route = useRoute();
   const { ingredient } = route.params as { ingredient: Ingredient };
 
@@ -24,6 +26,7 @@ const ModifyIngredientScreen: React.FC = () => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [expirationDate, setExpirationDate] = useState(new Date(ingredient.expirationDate));
 
+  // Handles the Date selection in the DataTimePicker
   const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
     if (event.type === "dismissed") return setShowDatePicker(false);
     if (selectedDate) {
@@ -34,6 +37,7 @@ const ModifyIngredientScreen: React.FC = () => {
     setShowDatePicker(false);
   };
 
+  // Handles Button Save Changes
   const handleSaveChanges = async () => {
     try {
       const storedIngredients = await AsyncStorage.getItem('ingredients');
@@ -51,6 +55,7 @@ const ModifyIngredientScreen: React.FC = () => {
     }
   };
 
+  // Handles Button Discard Changes
   const handleDiscardChanges = () => {
     Alert.alert('Discard Changes?', 'Are you sure you want to discard changes?', [
       { text: 'Cancel', style: 'cancel' },
@@ -122,14 +127,14 @@ const ModifyIngredientScreen: React.FC = () => {
       </>
 
       {/* Buttons */}
-      <View style={styles.buttonContainer}>
+      <ThemedView style={styles.buttonContainer}>
         <TouchableOpacity style={styles.saveButton} onPress={handleSaveChanges}>
           <ThemedText style={styles.buttonText}>Save</ThemedText>
         </TouchableOpacity>
         <TouchableOpacity style={styles.discardButton} onPress={handleDiscardChanges}>
           <ThemedText style={styles.buttonText}>Discard</ThemedText>
         </TouchableOpacity>
-      </View>
+      </ThemedView>
     </ThemedView>
   );
 };

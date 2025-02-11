@@ -16,11 +16,13 @@ import { Categories, Locations, Types} from '@/constants/Options';
 import { useNavigation, useFocusEffect  } from "@react-navigation/native";
 import type { StackNavigationProp } from "@react-navigation/stack";
 
+// Defines navigation type
 type RootStackParamList = {
   InfoIngredient: undefined;
   modifyIngredient: { ingredient: Ingredient };
 };
 
+// Defines navigation props
 type NavigationProps = StackNavigationProp<RootStackParamList, "InfoIngredient">;
 
 const InfoIngredientsScreen: React.FC = () => {
@@ -30,9 +32,9 @@ const InfoIngredientsScreen: React.FC = () => {
   const [selectedLocation, setSelectedLocation] = useState<string>('');
   const [selectedConfection, setSelectedConfection] = useState<string>('');
   const [activeFilter, setActiveFilter] = useState<string>('all'); // Track the active query
-
   const navigation = useNavigation<NavigationProps>();
 
+  // Fetches Ingredients from AsyncStorage and applys filters
   useFocusEffect(
     React.useCallback(() => {
       const fetchIngredients = async () => {
@@ -47,17 +49,18 @@ const InfoIngredientsScreen: React.FC = () => {
     }, [])
   );
 
+  // Applys filters
   const applyFilters = () => {
     let results = ingredients;
 
-    // Apply button filters first (Missing Data / Recently Added)
+    // Applys button filters first for Missing Data and Recently Added
     if (activeFilter === 'missing') {
       results = getMissingData(ingredients);
     } else if (activeFilter === 'recent') {
       results = getRecentlyAdded(ingredients);
     }
 
-    // Apply dropdown filters on top of button filters
+    // Applys dropdown filters on top of button filters
     if (selectedCategory) {
       results = getByCategoryOrConfection(results, selectedCategory, '');
     }
@@ -71,20 +74,21 @@ const InfoIngredientsScreen: React.FC = () => {
     setFilteredIngredients(results);
   };
 
-  // Apply filters when a filter changes
+  // Applys filters when a filter changes
   useEffect(() => {
     applyFilters();
   }, [selectedCategory, selectedLocation, selectedConfection, activeFilter]);
 
-  // Function to reset all filters
+  // Resets all filters
   const clearFilters = () => {
-    setActiveFilter('all'); // Reset button filters
+    setActiveFilter('all'); // Resets button filters
     setSelectedCategory('');
     setSelectedLocation('');
     setSelectedConfection('');
-    setFilteredIngredients(ingredients); // Show all ingredients
+    setFilteredIngredients(ingredients); // Shows all ingredients
   };
 
+  // Handles the Button Edit Ingredient
   const handleEditIngredient = (ingredient: Ingredient) => {
     Alert.alert(
       "Edit Ingredient",
@@ -99,7 +103,7 @@ const InfoIngredientsScreen: React.FC = () => {
     );
   };
 
-  // Delete ingredients
+  // Handles Button Delete Ingredient
   const handleDeleteIngredient = async (ingredient: Ingredient) => {
     Alert.alert(
       "Delete Ingredient?",
@@ -122,6 +126,7 @@ const InfoIngredientsScreen: React.FC = () => {
 
   return (
     <ThemedView style={styles.container}>
+      {/* Title */}
       <ThemedView>
         <ThemedText type="title">Explore Ingredients</ThemedText>
       </ThemedView>
@@ -216,7 +221,6 @@ const InfoIngredientsScreen: React.FC = () => {
                 <IconSymbol name="trash" size={20} color="#dc3545" style={styles.icon} />
               </TouchableOpacity>
             </ThemedView>
-
           </ThemedView>
         )}
       />

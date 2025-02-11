@@ -35,14 +35,14 @@ const AddIngredientScreen: React.FC = () => {
   const [scanning, setScanning] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Transforms Date into processable String
+  // Transforms Exact Date or Estimated Date into processable String
   const computedExpirationDate = useMemo(() => {
     return isExactDate
       ? expirationDate.toISOString().split("T")[0]
       : getEstimatedDate(commonEstimate);
   }, [isExactDate, expirationDate, commonEstimate]);
 
-  // Reset the form
+  // Resets the form
   const resetForm = () => {
     setIngredientName("");
     setCategory("");
@@ -53,6 +53,7 @@ const AddIngredientScreen: React.FC = () => {
     setCommonEstimate("");
   };
 
+  // Loads stored ingredients from AsyncStorage
   useEffect(() => {
     const loadIngredients = async () => {
       const storedIngredients = await AsyncStorage.getItem("ingredients");
@@ -61,6 +62,7 @@ const AddIngredientScreen: React.FC = () => {
     loadIngredients();
   }, []);
 
+  // Requests camera permissions
   useEffect(() => {
     (async () => {
       const { status } = await Camera.requestCameraPermissionsAsync();
@@ -68,14 +70,14 @@ const AddIngredientScreen: React.FC = () => {
     })();
   }, []);
 
-  // Handle the Date selection in the DataTimePicker
+  // Handles the Date selection in the DataTimePicker
   const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
     if (event.type === "dismissed") return setShowDatePicker(false);
     if (selectedDate) setExpirationDate(selectedDate);
     setShowDatePicker(false);
   };
   
-  // Handle Add Ingredient 
+  // Handles Add Ingredient 
   const handleAddIngredient = async () => {
     if (!ingredientName.trim()) {
       Alert.alert(
@@ -85,7 +87,7 @@ const AddIngredientScreen: React.FC = () => {
       return;
     }
 
-    // Save to AsyncStorage
+    // Saves to AsyncStorage
     const newIngredient: Ingredient = {
       name: ingredientName,
       category,
@@ -106,15 +108,15 @@ const AddIngredientScreen: React.FC = () => {
     )
   };
 
-  // Handle Barcode Scan and Add Ingredient
+  // Handles Barcode Scan and Add Ingredient
   const handleBarCodeScanned = async ({ data }: { data: string }) => {
-    // Disable scanning for multiple scans
+    // Disables scanning for multiple scans
     setScanning(false);
-    // Show loading indicator
+    // Shows loading indicator
     setLoading(true);
     
     try {
-      // Wait for API request
+      // Waits for API request
       const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${data}.json`);
       // Converts JSON into JS
       const result = await response.json();
@@ -122,10 +124,10 @@ const AddIngredientScreen: React.FC = () => {
       if (result.status === 1) {
         const ingredientName = result.product.product_name || "Unknown Product";
   
-        // Save to state
+        // Saves to state
         setIngredientName(ingredientName);
   
-        // Save to AsyncStorage
+        // Saves to AsyncStorage
         const newIngredient: Ingredient = {
           name: ingredientName,
           category: "",
@@ -135,27 +137,27 @@ const AddIngredientScreen: React.FC = () => {
           estimateDate: "", 
         };
   
-        // Load existing ingredients
+        // Loads existing ingredients
         const storedIngredients = await AsyncStorage.getItem("ingredients");
         const ingredientsArray = storedIngredients ? JSON.parse(storedIngredients) : [];
   
-        // Add new ingredient to list
+        // Adds new ingredient to list
         const updatedIngredients = [...ingredientsArray, newIngredient];
   
-        // Save updated list back to storage
+        // Saves updated list back to storage
         await AsyncStorage.setItem("ingredients", JSON.stringify(updatedIngredients));
   
-        // Show success alert
+        // Shows success alert
         Alert.alert("Product Found!",
           `Scanned: ${ingredientName}`,
           [{ text: "OK", onPress: resetForm }]
         )
       } else {
-        // Show not found alert
+        // Shows not found alert
         Alert.alert("Error", "Product not found in OpenFoodFacts");
       }
     } catch (error) {
-      // Show error alert
+      // Shows error alert
       Alert.alert("Error", "Failed to fetch product details.");
     } finally {
       setLoading(false);
@@ -170,12 +172,15 @@ const AddIngredientScreen: React.FC = () => {
           source={require('@/assets/images/icon.jpg')}
           style={styles.image}
         />
-        }>
+      }>
+      {/* Title */}
       <ThemedView style={styles.titleContainer}>
         <ThemedText type="title">Add an Ingredient to the Fridge</ThemedText>
       </ThemedView>
 
+      
       <ThemedView style={styles.container}>
+        {/* Name */}
         <ThemedText style={styles.label}>Ingredient Name:</ThemedText>
         <TextInput
           style={styles.input}
@@ -184,6 +189,7 @@ const AddIngredientScreen: React.FC = () => {
           placeholder="Enter Ingredient Name"
         />
 
+        {/* Category */}
         <ThemedText style={styles.label}>Category:</ThemedText>
         <Picker selectedValue={category} style={styles.picker} onValueChange={setCategory}>
           {Categories.map((item) => (
@@ -191,6 +197,7 @@ const AddIngredientScreen: React.FC = () => {
           ))}
         </Picker>
 
+        {/* Location */}
         <ThemedText style={styles.label}>Location:</ThemedText>
         <Picker selectedValue={location} style={styles.picker} onValueChange={setLocation}>
           {Locations.map((item) => (
@@ -198,6 +205,7 @@ const AddIngredientScreen: React.FC = () => {
             ))}
         </Picker>
 
+        {/* Confection type */}
         <ThemedText style={styles.label}>Confection Type:</ThemedText>
         <Picker selectedValue={confection} style={styles.picker} onValueChange={setConfection}>
           {Types.map((item) => (
@@ -205,11 +213,13 @@ const AddIngredientScreen: React.FC = () => {
             ))}
         </Picker>
 
+        {/* Switch for Exact Date */}
         <ThemedView style={styles.switchContainer}>
           <ThemedText>Exact Date</ThemedText>
           <Switch value={isExactDate} onValueChange={setIsExactDate} trackColor={{ false: "#ffffff88", true: "#81b0ff" }}/>
         </ThemedView>
 
+        {/* Exact Date or Estimated Date*/}
         {isExactDate ? (
           Platform.OS === "web" ? (
             <>
@@ -255,10 +265,12 @@ const AddIngredientScreen: React.FC = () => {
           </>
         )}
 
+        {/* Add Button */}
         <TouchableOpacity style={styles.addButton} onPress={handleAddIngredient}>
           <ThemedText style={styles.addButtonText}>Add Ingredient</ThemedText>
         </TouchableOpacity>
 
+        {/* Barcode Button */}
         <TouchableOpacity style={styles.scanButton} onPress={() => setScanning(true)}>
           <ThemedText style={styles.scanButtonText}>Scan Barcode</ThemedText>
         </TouchableOpacity>

@@ -10,6 +10,7 @@ import { useFocusEffect } from 'expo-router';
 const ExpiringSoonScreen: React.FC = () => {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
 
+  // Fetches Ingredients from AsyncStorage and adds to the list only Expiring Soon
   useFocusEffect(
     React.useCallback(() => {
       const fetchIngredients = async () => {
@@ -26,7 +27,9 @@ const ExpiringSoonScreen: React.FC = () => {
 
   return (
     <ThemedView style={styles.container}>
+      {/* Title */}
       <ThemedText type="title">Expiring Soon</ThemedText>
+      {/* List of Expiring Soon Ingredients */}
       <FlatList
         data={ingredients}
         keyExtractor={(item, index) => `${item.name}-${index}`}
