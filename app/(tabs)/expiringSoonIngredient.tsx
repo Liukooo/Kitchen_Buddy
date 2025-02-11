@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, StatusBar } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getExpiringSoon, Ingredient } from '../../scripts/ingredientQueries';
+import { getExpiringSoon } from '@/scripts/ingredientQueries';
+import { Ingredient } from '@/constants/Ingredient';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { useFocusEffect } from 'expo-router';

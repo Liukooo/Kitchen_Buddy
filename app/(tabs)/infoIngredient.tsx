@@ -7,9 +7,9 @@ import {
   getMissingData,
   getRecentlyAdded,
   getByCategoryOrConfection,
-  getByLocation,
-  Ingredient,
+  getByLocation
 } from '@/scripts/ingredientQueries';
+import { Ingredient } from '@/constants/Ingredient';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { Categories, Locations, Types} from '@/constants/Options';

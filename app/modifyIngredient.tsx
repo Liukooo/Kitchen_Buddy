@@ -6,7 +6,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
-import { Ingredient } from '@/scripts/ingredientQueries';
+import { Ingredient } from '@/constants/Ingredient';
 import { Categories, Locations, Types } from '@/constants/Options';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 

@@ -8,7 +8,6 @@ import {
   Alert,
   TouchableOpacity,
   Modal,
-  View,
   ActivityIndicator,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
@@ -16,30 +15,11 @@ import { Camera, CameraView } from "expo-camera";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Categories, Locations, Types } from "@/constants/Options";
+import { Ingredient } from '@/constants/Ingredient';
+import { getEstimatedDate } from '@/scripts/ingredientQueries';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-
-interface Ingredient {
-  name: string;
-  category: string;
-  location: string;
-  type: string;
-  expirationDate: string;
-  estimateDate: string;
-}
-
-const getEstimatedDate = (estimate: string): string => {
-  const date = new Date();
-  const daysMap: Record<string, number> = {
-    "2 days": 2,
-    "1 week": 7,
-    "10 days": 10,
-    "1 month": 30,
-  };
-  date.setDate(date.getDate() + (daysMap[estimate] || 0));
-  return estimate ? date.toISOString().split("T")[0] : "";
-};
 
 const AddIngredientScreen: React.FC = () => {
   const [ingredientName, setIngredientName] = useState("");
@@ -55,6 +35,24 @@ const AddIngredientScreen: React.FC = () => {
   const [scanning, setScanning] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Transforms Date into processable String
+  const computedExpirationDate = useMemo(() => {
+    return isExactDate
+      ? expirationDate.toISOString().split("T")[0]
+      : getEstimatedDate(commonEstimate);
+  }, [isExactDate, expirationDate, commonEstimate]);
+
+  // Reset the form
+  const resetForm = () => {
+    setIngredientName("");
+    setCategory("");
+    setLocation("");
+    setConfection("");
+    setIsExactDate(false);
+    setExpirationDate(new Date());
+    setCommonEstimate("");
+  };
+
   useEffect(() => {
     const loadIngredients = async () => {
       const storedIngredients = await AsyncStorage.getItem("ingredients");
@@ -69,6 +67,44 @@ const AddIngredientScreen: React.FC = () => {
       setHasPermission(status === "granted");
     })();
   }, []);
+
+  // Handle the Date selection in the DataTimePicker
+  const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+    if (event.type === "dismissed") return setShowDatePicker(false);
+    if (selectedDate) setExpirationDate(selectedDate);
+    setShowDatePicker(false);
+  };
+  
+  // Handle Add Ingredient 
+  const handleAddIngredient = async () => {
+    if (!ingredientName.trim()) {
+      Alert.alert(
+        "Alert 🚫",
+        "Please enter an item name."
+      );
+      return;
+    }
+
+    // Save to AsyncStorage
+    const newIngredient: Ingredient = {
+      name: ingredientName,
+      category,
+      location,
+      type: confection,
+      expirationDate: computedExpirationDate,
+      estimateDate: commonEstimate,
+    };
+
+    const updatedIngredients = [...ingredients, newIngredient];
+    await AsyncStorage.setItem("ingredients", JSON.stringify(updatedIngredients));
+    setIngredients(updatedIngredients);
+
+    Alert.alert(
+      "Ingredient Added ✅",
+      `Name: ${newIngredient.name}\nCategory: ${newIngredient.category}\nLocation: ${newIngredient.location}\nType: ${newIngredient.type}\nExpiration Date: ${newIngredient.expirationDate}`,
+      [{ text: "OK", onPress: resetForm }]
+    )
+  };
 
   // Handle Barcode Scan and Add Ingredient
   const handleBarCodeScanned = async ({ data }: { data: string }) => {
@@ -124,60 +160,6 @@ const AddIngredientScreen: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  // Transforms Date into processable String
-  const computedExpirationDate = useMemo(() => {
-    return isExactDate
-      ? expirationDate.toISOString().split("T")[0]
-      : getEstimatedDate(commonEstimate);
-  }, [isExactDate, expirationDate, commonEstimate]);
-
-  // Handle Add Ingredient 
-  const handleAddIngredient = async () => {
-    if (!ingredientName.trim()) {
-      Alert.alert(
-        "Alert 🚫",
-        "Please enter an item name."
-      );
-      return;
-    }
-
-    // Save to AsyncStorage
-    const newIngredient: Ingredient = {
-      name: ingredientName,
-      category,
-      location,
-      type: confection,
-      expirationDate: computedExpirationDate,
-      estimateDate: commonEstimate,
-    };
-
-    const updatedIngredients = [...ingredients, newIngredient];
-    await AsyncStorage.setItem("ingredients", JSON.stringify(updatedIngredients));
-    setIngredients(updatedIngredients);
-
-    Alert.alert(
-      "Ingredient Added ✅",
-      `Name: ${newIngredient.name}\nCategory: ${newIngredient.category}\nLocation: ${newIngredient.location}\nType: ${newIngredient.type}\nExpiration Date: ${newIngredient.expirationDate}`,
-      [{ text: "OK", onPress: resetForm }]
-    )
-  };
-
-  const resetForm = () => {
-    setIngredientName("");
-    setCategory("");
-    setLocation("");
-    setConfection("");
-    setIsExactDate(false);
-    setExpirationDate(new Date());
-    setCommonEstimate("");
-  };
-
-  const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    if (event.type === "dismissed") return setShowDatePicker(false);
-    if (selectedDate) setExpirationDate(selectedDate);
-    setShowDatePicker(false);
   };
 
   return (
