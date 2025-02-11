@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, FlatList, TouchableOpacity, Alert, StyleSheet, StatusBar } from 'react-native';
+import { FlatList, TouchableOpacity, Alert, StyleSheet, StatusBar } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
 import { IconSymbol } from "@/components/ui/IconSymbol";
@@ -12,10 +12,8 @@ import {
 } from '@/scripts/ingredientQueries';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect  } from "@react-navigation/native";
 import type { StackNavigationProp } from "@react-navigation/stack";
-
-
 
 type RootStackParamList = {
   InfoIngredient: undefined;
@@ -32,18 +30,21 @@ const InfoIngredientsScreen: React.FC = () => {
   const [selectedConfection, setSelectedConfection] = useState<string>('');
   const [activeFilter, setActiveFilter] = useState<string>('all'); // Track the active query
 
-  useEffect(() => {
-    const fetchIngredients = async () => {
-      const storedIngredients = await AsyncStorage.getItem('ingredients');
-      if (storedIngredients) {
-        const parsedIngredients: Ingredient[] = JSON.parse(storedIngredients);
-        setIngredients(parsedIngredients);
-        setFilteredIngredients(parsedIngredients); // Default: Show all ingredients
-      }
-    };
+  const navigation = useNavigation<NavigationProps>();
 
-    fetchIngredients();
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchIngredients = async () => {
+        const storedIngredients = await AsyncStorage.getItem('ingredients');
+        if (storedIngredients) {
+          const parsedIngredients: Ingredient[] = JSON.parse(storedIngredients);
+          setIngredients(parsedIngredients);
+          setFilteredIngredients(parsedIngredients);
+        }
+      };
+      fetchIngredients();
+    }, [])
+  );
 
   const applyFilters = () => {
     let results = ingredients;
@@ -83,13 +84,12 @@ const InfoIngredientsScreen: React.FC = () => {
     setFilteredIngredients(ingredients); // Show all ingredients
   };
 
-  const navigation = useNavigation<NavigationProps>();
-
   const handleEditIngredient = (ingredient: Ingredient) => {
     Alert.alert(
       "Edit Ingredient",
       `You selected: ${ingredient.name}`,
       [
+        { text: "Cancel", style: "cancel" },
         {
           text: "Continue",
           onPress: () => navigation.navigate("modifyIngredient", { ingredient }),
@@ -203,7 +203,7 @@ const InfoIngredientsScreen: React.FC = () => {
         data={filteredIngredients}
         keyExtractor={(item, index) => `${item.name}-${index}`}
         renderItem={({ item }) => (
-          <View style={styles.item}>
+          <ThemedView style={styles.item}>
 
             {/* Ingredient Info */}
             <ThemedText style={styles.itemText}>
@@ -211,7 +211,7 @@ const InfoIngredientsScreen: React.FC = () => {
             </ThemedText>
     
             {/* Icons on the right */}
-            <View style={styles.iconContainer}>
+            <ThemedView style={styles.iconContainer}>
               {/* Modify Icon */}
               <TouchableOpacity onPress={() => handleEditIngredient(item)}>
                 <IconSymbol name="pencil" size={20} color="#007bff" style={styles.icon} />
@@ -221,9 +221,9 @@ const InfoIngredientsScreen: React.FC = () => {
               <TouchableOpacity onPress={() => handleDeleteIngredient(item)}>
                 <IconSymbol name="trash" size={20} color="#dc3545" style={styles.icon} />
               </TouchableOpacity>
-            </View>
+            </ThemedView>
 
-          </View>
+          </ThemedView>
         )}
       />
     </ThemedView>

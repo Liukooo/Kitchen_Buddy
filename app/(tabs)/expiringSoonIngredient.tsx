@@ -4,33 +4,35 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getExpiringSoon, Ingredient } from '../../scripts/ingredientQueries';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
+import { useFocusEffect } from 'expo-router';
 
 const ExpiringSoonScreen: React.FC = () => {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
 
-  useEffect(() => {
-    const fetchIngredients = async () => {
-      const storedIngredients = await AsyncStorage.getItem('ingredients');
-      if (storedIngredients) {
-        const parsedIngredients: Ingredient[] = JSON.parse(storedIngredients);
-        setIngredients(getExpiringSoon(parsedIngredients, 3)); // Show items expiring in ≤ 3 days
-      }
-    };
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchIngredients = async () => {
+        const storedIngredients = await AsyncStorage.getItem('ingredients');
+        if (storedIngredients) {
+          const parsedIngredients: Ingredient[] = JSON.parse(storedIngredients);
+          setIngredients(getExpiringSoon(parsedIngredients, 3)); // Show items expiring in ≤ 3 days
+        }
+      };
 
-    fetchIngredients();
-  }, []);
+      fetchIngredients();
+    }, [])
+  );
 
   return (
     <ThemedView style={styles.container}>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Expiring Soon</ThemedText>
-      </ThemedView>
+      <ThemedText type="title">Expiring Soon</ThemedText>
       <FlatList
         data={ingredients}
         keyExtractor={(item, index) => `${item.name}-${index}`}
         renderItem={({ item }) => (
-          <ThemedView style={styles.item}>
-            <ThemedText>{item.name} - Expires on: {item.expirationDate}</ThemedText>
+          <ThemedView style={styles.itemContainer}>
+            <ThemedText style={styles.itemText}>{item.name}</ThemedText>
+            <ThemedText style={styles.itemSubText}>Expires on: {item.expirationDate}</ThemedText>
           </ThemedView>
         )}
       />
@@ -42,18 +44,29 @@ const styles = StyleSheet.create({
   container: { 
     paddingTop: StatusBar.currentHeight || 0,
     flex: 1,
-    padding: 32,
-    gap: 16,
-    overflow: 'hidden',
+    padding: 20,
   },
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
+  itemContainer: {
+    backgroundColor: "#fff",
+    padding: 15,
+    marginVertical: 8,
+    borderRadius: 8,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
   },
-  item: { padding: 10, borderBottomWidth: 1, borderBottomColor: '#ccc' },
+  itemText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "black"
+  },
+  itemSubText: {
+    fontSize: 14,
+    color: "gray",
+    marginTop: 4,
+  },
 });
 
 export default ExpiringSoonScreen;
-
-  

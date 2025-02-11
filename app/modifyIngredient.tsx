@@ -1,62 +1,196 @@
-import React, { useState } from "react";
-import { StatusBar, TextInput, Button, Alert, StyleSheet } from "react-native";
-import { useNavigation, useRoute } from "@react-navigation/native";
-import { ThemedView } from "@/components/ThemedView";
-import { ThemedText } from "@/components/ThemedText";
+import React, { useState } from 'react';
+import { View, TextInput, TouchableOpacity, Alert, StyleSheet, StatusBar } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Picker } from '@react-native-picker/picker';
+import { ThemedView } from '@/components/ThemedView';
+import { ThemedText } from '@/components/ThemedText';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import type { StackNavigationProp } from '@react-navigation/stack';
+import { Ingredient } from '@/scripts/ingredientQueries';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 
-type Ingredient = {
-  name: string;
-  category: string;
-  location: string;
-  type: string;
-  expirationDate: string;
+// Define navigation type
+type RootStackParamList = {
+  modifyIngredient: { ingredient: Ingredient };
 };
 
-const ModifyIngredient = () => {
-  const navigation = useNavigation();
+const ModifyIngredientScreen: React.FC = () => {
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList, 'modifyIngredient'>>();
   const route = useRoute();
-  const ingredient = route.params as Ingredient;
+  const { ingredient } = route.params as { ingredient: Ingredient };
 
-  const [name, setName] = useState(ingredient.name);
-  const [category, setCategory] = useState(ingredient.category);
-  const [location, setLocation] = useState(ingredient.location);
-  const [type, setType] = useState(ingredient.type);
-  const [expirationDate, setExpirationDate] = useState(ingredient.expirationDate);
+  const [modifiedIngredient, setModifiedIngredient] = useState<Ingredient>({ ...ingredient });
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [expirationDate, setExpirationDate] = useState(new Date(ingredient.expirationDate));
 
-  const handleSave = () => {
-    // Implement the update logic (e.g., update local state)
-    Alert.alert("Updated", `Ingredient ${name} has been updated!`);
-    navigation.goBack();
+  const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+    if (event.type === "dismissed") return setShowDatePicker(false);
+    if (selectedDate) {
+      setExpirationDate(selectedDate);
+      const formattedDate = selectedDate.toISOString().split('T')[0]; // Keep only YYYY-MM-DD
+      setModifiedIngredient({ ...modifiedIngredient, expirationDate: formattedDate });
+    }
+    setShowDatePicker(false);
+  };
+
+  const handleSaveChanges = async () => {
+    try {
+      const storedIngredients = await AsyncStorage.getItem('ingredients');
+      let ingredients: Ingredient[] = storedIngredients ? JSON.parse(storedIngredients) : [];
+      
+      const updatedIngredients = ingredients.map((item) => 
+        item.name === ingredient.name ? modifiedIngredient : item
+      );
+      
+      await AsyncStorage.setItem('ingredients', JSON.stringify(updatedIngredients));
+      Alert.alert('Success 🎉', 'Ingredient updated successfully!');
+      navigation.goBack();
+    } catch (error) {
+      Alert.alert('Error', 'Failed to update ingredient');
+    }
+  };
+
+  const handleDiscardChanges = () => {
+    Alert.alert('Discard Changes?', 'Are you sure you want to discard changes?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Discard', onPress: () => navigation.goBack(), style: 'destructive' }
+    ]);
   };
 
   return (
     <ThemedView style={styles.container}>
-        <ThemedView style={styles.titleContainer}>
-            <ThemedText type="title">Edit Ingredient</ThemedText>
-        </ThemedView>
-      <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Name" />
-      <TextInput style={styles.input} value={category} onChangeText={setCategory} placeholder="Category" />
-      <TextInput style={styles.input} value={location} onChangeText={setLocation} placeholder="Location" />
-      <TextInput style={styles.input} value={type} onChangeText={setType} placeholder="Confection type" />
-      <TextInput style={styles.input} value={expirationDate} onChangeText={setExpirationDate} placeholder="Expiration Date" />
-      <Button title="Save Changes" onPress={handleSave} />
+      <ThemedText type="title">Modify Ingredient</ThemedText>
+
+      {/* Name */}
+      <TextInput
+        style={styles.input}
+        value={modifiedIngredient.name}
+        onChangeText={(text) => setModifiedIngredient({ ...modifiedIngredient, name: text })}
+        placeholder="Ingredient Name"
+      />
+
+      {/* Category */}
+      <Picker
+        selectedValue={modifiedIngredient.category}
+        style={styles.picker}
+        onValueChange={(itemValue) => setModifiedIngredient({ ...modifiedIngredient, category: itemValue })}
+      >
+        <Picker.Item label="Select Category" value="" />
+        <Picker.Item label="Fruit" value="fruit" />
+        <Picker.Item label="Vegetable" value="vegetable" />
+        <Picker.Item label="Dairy" value="dairy" />
+        <Picker.Item label="Fish" value="fish" />
+        <Picker.Item label="Meat" value="meat" />
+        <Picker.Item label="Beverage" value="beverage" />
+      </Picker>
+
+      {/* Location */}
+      <Picker
+        selectedValue={modifiedIngredient.location}
+        style={styles.picker}
+        onValueChange={(itemValue) => setModifiedIngredient({ ...modifiedIngredient, location: itemValue })}
+      >
+        <Picker.Item label="Select Location" value="" />
+        <Picker.Item label="Fridge" value="fridge" />
+        <Picker.Item label="Freezer" value="freezer" />
+        <Picker.Item label="Pantry" value="pantry" />
+      </Picker>
+
+      {/* Type */}
+      <Picker
+        selectedValue={modifiedIngredient.type}
+        style={styles.picker}
+        onValueChange={(itemValue) => setModifiedIngredient({ ...modifiedIngredient, type: itemValue })}
+      >
+        <Picker.Item label="Select Confection Type" value="" />
+        <Picker.Item label="Fresh" value="fresh" />
+        <Picker.Item label="Canned" value="canned" />
+        <Picker.Item label="Frozen" value="frozen" />
+        <Picker.Item label="Cured" value="cured" />
+      </Picker>
+
+      <>
+        <TouchableOpacity
+          style={styles.dateButton}
+          onPress={() => setShowDatePicker(true)}
+        >
+          <ThemedText style={styles.dateButtonText}>Pick Expiration Date</ThemedText>
+        </TouchableOpacity>
+        {showDatePicker && (
+          <DateTimePicker
+            value={expirationDate}
+            mode="date"
+            display="default"
+            onChange={handleDateChange}
+          />
+        )}
+      </>
+
+      {/* Buttons */}
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.saveButton} onPress={handleSaveChanges}>
+          <ThemedText style={styles.buttonText}>Save</ThemedText>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.discardButton} onPress={handleDiscardChanges}>
+          <ThemedText style={styles.buttonText}>Discard</ThemedText>
+        </TouchableOpacity>
+      </View>
     </ThemedView>
   );
 };
 
+
 const styles = StyleSheet.create({
-  container: { paddingTop: StatusBar.currentHeight || 0,
+  container: {
+    paddingTop: StatusBar.currentHeight || 0,
     flex: 1,
-    padding: 32,
+    padding: 20,
     gap: 12,
-    overflow: 'hidden',
   },
-  titleContainer: {
+  input: {
+    backgroundColor: "white",
+    height: 50,
+    paddingHorizontal: 10,
+    marginTop: 10,
+    marginBottom: 10,
+    color: "black",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#ccc",
+  },
+  picker: {
+    height: 50,
+    backgroundColor: 'white',
+    marginBottom: 10,
+  },
+  dateButton: { backgroundColor: "#007bff", padding: 12, borderRadius: 5, alignItems: "center", marginBottom: 16 },
+  dateButtonText: { color: "white", fontSize: 16, fontWeight: "bold" },
+  buttonContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
+    justifyContent: 'space-around',
+    marginTop: 20,
   },
-  input: { backgroundColor: "white", height: 50, paddingHorizontal: 5, marginBottom: 16, color: "black" },
+  saveButton: {
+    backgroundColor: '#28a745',
+    padding: 12,
+    borderRadius: 5,
+    flex: 1,
+    marginHorizontal: 5,
+    alignItems: 'center',
+  },
+  discardButton: {
+    backgroundColor: '#dc3545',
+    padding: 12,
+    borderRadius: 5,
+    flex: 1,
+    marginHorizontal: 5,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
 });
 
-export default ModifyIngredient;
+export default ModifyIngredientScreen;
