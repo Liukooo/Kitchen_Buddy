@@ -101,6 +101,7 @@ const AddIngredientScreen: React.FC = () => {
     await AsyncStorage.setItem("ingredients", JSON.stringify(updatedIngredients));
     setIngredients(updatedIngredients);
 
+    // Shows success alert
     Alert.alert(
       `Ingredient Added ✅`,
       `Name: ${newIngredient.name}\nBrand: ${newIngredient.brand}\nCategory: ${newIngredient.category}\nLocation: ${newIngredient.location}\nType: ${newIngredient.type}\nExpiration Date: ${newIngredient.expirationDate}`,
@@ -164,13 +165,15 @@ const AddIngredientScreen: React.FC = () => {
     }
   };
 
-
+  // Requests camera permission when the barcode scanner is accessed
   const checkPermissions = async () => {
     const { status, canAskAgain } = await Camera.requestCameraPermissionsAsync();
   
     if (status === "granted") {
+      // If permission is granted, it enables scanning
       setHasPermission(true);
     } else if (status === "denied" && !canAskAgain) {
+      // If permission is denied, prompts the user to open settings
       Alert.alert(
         "Camera Permission Denied",
         "You need to enable camera permissions in settings to use this feature.",
@@ -269,6 +272,7 @@ const AddIngredientScreen: React.FC = () => {
           <ThemedText style={styles.buttonText}>Scan Barcode</ThemedText>
         </TouchableOpacity>
 
+        {/* Barcode Screen */}
         <Modal visible={scanning} animationType="slide">
           <ThemedView style={styles.modalContainer}>
             {hasPermission === false ? (

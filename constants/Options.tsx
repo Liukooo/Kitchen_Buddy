@@ -2,6 +2,8 @@ export const Categories = [
   { label: "Select Category", value: "" },
   { label: "Fruit", value: "fruit" },
   { label: "Vegetable", value: "vegetable" },
+  { label: "Bread", value: "bread" },
+  { label: "Pasta", value: "pasta" },
   { label: "Dairy", value: "dairy" },
   { label: "Fish", value: "fish" },
   { label: "Meat", value: "meat" },

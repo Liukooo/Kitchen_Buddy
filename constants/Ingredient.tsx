@@ -4,5 +4,6 @@ export interface Ingredient {
     category?: string;
     location?: string;
     type?: string;
+    isOpened?: boolean;
     expirationDate: string; // Stored as YYYY-MM-DD
   }

@@ -168,7 +168,7 @@ export const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: Theme.gray,
     },
-    listText: {
+    itemTitle: {
         fontSize: 18,
         fontWeight: 'bold',
         color: Theme.black
@@ -181,6 +181,13 @@ export const styles = StyleSheet.create({
         fontSize: 14,
         color: Theme.gray,
         marginTop: 4,
+        fontWeight: 'bold',
+    },
+    itemDangerText: {
+        fontSize: 14,
+        color: Theme.danger,
+        marginTop: 4,
+        fontWeight: 'bold',
     },
 
     /* === MODALS & OVERLAYS === */

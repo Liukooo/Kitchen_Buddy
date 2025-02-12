@@ -17,18 +17,26 @@ const ExpiringSoonScreen: React.FC = () => {
 
   // Fetches Ingredients from AsyncStorage and adds to the list only Expiring Soon
   useFocusEffect(
-    React.useCallback(() => {
+  React.useCallback(() => {
       const fetchIngredients = async () => {
         const storedIngredients = await AsyncStorage.getItem('ingredients');
         if (storedIngredients) {
           const parsedIngredients: Ingredient[] = JSON.parse(storedIngredients);
-          setIngredients(getExpiringSoon(parsedIngredients, 3)); // Show items expiring in ≤ 3 days
+          const expiringSoon = getExpiringSoon(parsedIngredients, 7);
+
+          // Sorts ingredients by expiration date
+          const sortedIngredients = expiringSoon.sort((a, b) =>
+            new Date(a.expirationDate).getTime() - new Date(b.expirationDate).getTime()
+          );
+
+          setIngredients(sortedIngredients);
         }
       };
 
       fetchIngredients();
     }, [])
   );
+
 
   return (
     <ThemedView style={styles.container}>
@@ -39,12 +47,30 @@ const ExpiringSoonScreen: React.FC = () => {
         <FlatList
           data={ingredients}
           keyExtractor={(item, index) => `${item.name}-${index}`}
-          renderItem={({ item }) => (
-            <ThemedView style={styles.itemContainer}>
-              <ThemedText style={styles.listText}>{item.name}</ThemedText>
-              <ThemedText style={styles.itemSubText}>Expires on: {item.expirationDate}</ThemedText>
-            </ThemedView>
-          )}
+          renderItem={({ item }) => {
+            const today = new Date();
+            const expirationDate = new Date(item.expirationDate);
+            const isExpired = expirationDate < today;
+
+            return (
+              <ThemedView style={styles.itemContainer}>
+                <ThemedText style={styles.itemTitle}>{item.name}</ThemedText>
+
+              {/* Expiration Date */}
+                {isExpired ? (
+                  <ThemedText style={styles.itemDangerText}>Expired on: {item.expirationDate}</ThemedText>
+                ) : (
+                  <ThemedText style={styles.itemSubText}>Expires on: {item.expirationDate}</ThemedText>
+                )}
+              
+              {/* Opened Ingredients */}
+                {item.isOpened && (
+                  <ThemedText style={styles.itemDangerText}>OPENED</ThemedText>
+                )}
+                
+              </ThemedView>
+            );
+          }}
         />
       </ThemedView>
     </ThemedView>
