@@ -34,12 +34,52 @@ const ModifyIngredientScreen: React.FC = () => {
   const route = useRoute();
   const { ingredient } = route.params as { ingredient: Ingredient };
 
+  const [initialType] = useState(ingredient.type);
+  const [initialExpirationDate] = useState(new Date(ingredient.expirationDate))
+  const [hasBeenFrozen, setHasBeenFrozen] = useState(false); // Tracks if freezing was applied
   const [modifiedIngredient, setModifiedIngredient] = useState<Ingredient>({ ...ingredient });
   const [isExactDate, setIsExactDate] = useState(!!ingredient.expirationDate);
   const [commonEstimate, setCommonEstimate] = useState(ingredient.expirationDate || "");
   const [expirationDate, setExpirationDate] = useState(
     ingredient.expirationDate ? new Date(ingredient.expirationDate) : new Date()
   );
+
+  // Freezes ingredient only once if changing from a fresh type to frozen and extends expiration by 6 months
+  const handleTypeChanges = (itemValue: string) => {
+    if (itemValue === "frozen" && initialType === "fresh" && !hasBeenFrozen) {
+      // Extend expiration by 6 months
+      const newExpirationDate = new Date(initialExpirationDate);
+      newExpirationDate.setMonth(newExpirationDate.getMonth() + 6);
+  
+      setExpirationDate(newExpirationDate);
+      setModifiedIngredient((prev) => ({
+        ...prev,
+        type: itemValue, // ✅ Ensure type is updated
+        expirationDate: newExpirationDate.toISOString().split("T")[0],
+      }));
+  
+      setHasBeenFrozen(true);
+  
+      Alert.alert(
+        `Item has been frozen! 🧊`,
+        `The expiration date has been updated to: ${newExpirationDate.toISOString().split("T")[0]}`
+      );
+    } else if (itemValue !== "frozen" && hasBeenFrozen) {
+      // Revert expiration date if switching away from frozen
+      setExpirationDate(initialExpirationDate);
+      setModifiedIngredient((prev) => ({
+        ...prev,
+        type: itemValue, // ✅ Ensure type is updated
+        expirationDate: initialExpirationDate.toISOString().split("T")[0],
+      }));
+  
+      setHasBeenFrozen(false);
+    } else {
+      // ✅ Ensure type updates in all other cases
+      setModifiedIngredient((prev) => ({ ...prev, type: itemValue }));
+    }
+  };
+  
 
   // Handles Button Save Changes
   const handleSaveChanges = async () => {
@@ -80,6 +120,7 @@ const ModifyIngredientScreen: React.FC = () => {
       <TextInput
         style={styles.input}
         value={modifiedIngredient.name}
+        maxLength={20}
         onChangeText={(text) => setModifiedIngredient({ ...modifiedIngredient, name: text })}
         placeholder="Ingredient Name"
       />
@@ -88,6 +129,7 @@ const ModifyIngredientScreen: React.FC = () => {
       <TextInput
         style={styles.input}
         value={modifiedIngredient.brand}
+        maxLength={20}
         onChangeText={(itemValue) => setModifiedIngredient({ ...modifiedIngredient, brand: itemValue })}
         placeholder="Brand Name"
       />
@@ -118,7 +160,7 @@ const ModifyIngredientScreen: React.FC = () => {
       <Picker
         selectedValue={modifiedIngredient.type}
         style={styles.picker}
-        onValueChange={(itemValue) => setModifiedIngredient({ ...modifiedIngredient, type: itemValue })}
+        onValueChange={handleTypeChanges}
       >
         {Types.map((item) => (
             <Picker.Item key={item.value} label={item.label} value={item.value} />

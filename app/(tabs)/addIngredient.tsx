@@ -102,7 +102,7 @@ const AddIngredientScreen: React.FC = () => {
     setIngredients(updatedIngredients);
 
     Alert.alert(
-      "Ingredient Added ✅",
+      `Ingredient Added ✅`,
       `Name: ${newIngredient.name}\nBrand: ${newIngredient.brand}\nCategory: ${newIngredient.category}\nLocation: ${newIngredient.location}\nType: ${newIngredient.type}\nExpiration Date: ${newIngredient.expirationDate}`,
       [{ text: "OK", onPress: resetForm }]
     )
@@ -199,6 +199,7 @@ const AddIngredientScreen: React.FC = () => {
         <TextInput
           style={styles.input}
           value={ingredientName}
+          maxLength={20}
           onChangeText={setIngredientName}
           placeholder="Enter Ingredient Name"
         />
@@ -207,6 +208,7 @@ const AddIngredientScreen: React.FC = () => {
         <TextInput
           style={styles.input}
           value={brand}
+          maxLength={20}
           onChangeText={setBrand}
           placeholder="Enter Brand (optional)"
         />
