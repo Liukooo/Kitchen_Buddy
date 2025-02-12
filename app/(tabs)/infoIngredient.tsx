@@ -143,7 +143,7 @@ const InfoIngredientsScreen: React.FC = () => {
 
           {/* Recently */}
           <TouchableOpacity
-            style={[styles.button, activeFilter === 'recent' && styles.activeButton]}
+            style={[styles.primaryButton, activeFilter === 'recent' && styles.secondaryButton]}
             onPress={() => setActiveFilter('recent')}
             activeOpacity={0.7}
           >
@@ -152,7 +152,7 @@ const InfoIngredientsScreen: React.FC = () => {
 
           {/* Missing */}
           <TouchableOpacity
-            style={[styles.button, activeFilter === 'missing' && styles.activeButton]}
+            style={[styles.primaryButton, activeFilter === 'missing' && styles.secondaryButton]}
             onPress={() => setActiveFilter('missing')}
             activeOpacity={0.7}
           >
@@ -161,7 +161,7 @@ const InfoIngredientsScreen: React.FC = () => {
 
           {/* Reset */}
           <TouchableOpacity
-            style={[styles.button, styles.clearButton]}
+            style={[styles.primaryButton, styles.dangerButton]}
             onPress={clearFilters}
             activeOpacity={0.7}
           >

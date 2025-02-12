@@ -1,9 +1,10 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 
 import {
   ActivityIndicator,
   Alert,
   Image,
+  Linking,
   Modal,
   Switch,
   TextInput,
@@ -23,6 +24,7 @@ import DatePicker from "@/components/DatePicker";
 import { styles } from "@/components/ui/Styles";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { useFocusEffect } from "expo-router";
 
 
 const AddIngredientScreen: React.FC = () => {
@@ -162,6 +164,23 @@ const AddIngredientScreen: React.FC = () => {
     }
   };
 
+
+  const checkPermissions = async () => {
+    const { status, canAskAgain } = await Camera.requestCameraPermissionsAsync();
+  
+    if (status === "granted") {
+      setHasPermission(true);
+    } else if (status === "denied" && !canAskAgain) {
+      Alert.alert(
+        "Camera Permission Denied",
+        "You need to enable camera permissions in settings to use this feature.",
+        [{ text: "Open Settings", onPress: () => Linking.openSettings() }, { text: "Cancel" }]
+      );
+    } else {
+      setHasPermission(false);
+    }
+  };
+
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
@@ -239,21 +258,31 @@ const AddIngredientScreen: React.FC = () => {
         )}
 
         {/* Add Button */}
-        <TouchableOpacity style={styles.addButton} onPress={handleAddIngredient}>
+        <TouchableOpacity style={styles.successButton} onPress={handleAddIngredient}>
           <ThemedText style={styles.buttonText}>Add Ingredient</ThemedText>
         </TouchableOpacity>
 
         {/* Barcode Button */}
-        <TouchableOpacity style={styles.scanButton} onPress={() => setScanning(true)}>
+        <TouchableOpacity style={styles.primaryButton} onPress={() => setScanning(true)}>
           <ThemedText style={styles.buttonText}>Scan Barcode</ThemedText>
         </TouchableOpacity>
 
-        <Modal visible={scanning} animationType="slide" transparent>
+        <Modal visible={scanning} animationType="slide">
           <ThemedView style={styles.modalContainer}>
             {hasPermission === false ? (
-              <ThemedText style={styles.buttonText}>
-                Camera permission is required to scan barcodes.
-              </ThemedText>
+              <ThemedView>
+                <ThemedText style={styles.buttonText}>
+                  Camera permission is required to scan barcodes.
+                </ThemedText>
+                <ThemedView style={styles.buttonContainer}>
+                  <TouchableOpacity style={styles.primaryButton} onPress={checkPermissions}>
+                    <ThemedText style={styles.buttonText}>Check Permissions</ThemedText>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.dangerButton} onPress={() => setScanning(false)}>
+                    <ThemedText style={styles.buttonText}>Close Scanner</ThemedText>
+                  </TouchableOpacity>
+                </ThemedView>
+              </ThemedView>
             ) : (
               <CameraView
                 style={styles.camera}

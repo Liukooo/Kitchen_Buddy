@@ -81,41 +81,7 @@ export const styles = StyleSheet.create({
         justifyContent: 'center',
         marginTop: 10,
     },
-    dateButton: { 
-        backgroundColor: Theme.primary, 
-        padding: 12, 
-        borderRadius: 5, 
-        alignItems: 'center', 
-        marginBottom: 16 
-    },
-    addButton: { 
-        backgroundColor: Theme.success, 
-        padding: 12, 
-        borderRadius: 5, 
-        alignItems: 'center', 
-        marginTop: 10 
-    },
-    scanButton: {
-        backgroundColor: Theme.primary,
-        padding: 12,
-        borderRadius: 5,
-        alignItems: 'center',
-        marginTop: 10,
-    },
-    closeButton: {
-        position: 'absolute',
-        bottom: 50,
-        backgroundColor: Theme.danger,
-        padding: 10,
-        borderRadius: 5,
-    },
-    clearButton: { 
-        backgroundColor: Theme.danger 
-    },
-    activeButton: { 
-        backgroundColor: Theme.secondary 
-    },
-    button: { 
+    primaryButton: { 
         backgroundColor: Theme.primary, 
         padding: 12, 
         borderRadius: 5, 
@@ -123,7 +89,17 @@ export const styles = StyleSheet.create({
         flex: 1, 
         marginHorizontal: 5 
     },
-    saveButton: {
+    dateButton: { 
+        backgroundColor: Theme.primary, 
+        padding: 12, 
+        borderRadius: 5, 
+        alignItems: 'center',
+        marginHorizontal: 5 
+    },
+    secondaryButton: { 
+        backgroundColor: Theme.secondary 
+    },
+    successButton: {
         backgroundColor: Theme.success,
         padding: 12,
         borderRadius: 5,
@@ -131,13 +107,21 @@ export const styles = StyleSheet.create({
         marginHorizontal: 5,
         alignItems: 'center',
     },
-    discardButton: {
+    dangerButton: {
         backgroundColor: Theme.danger,
         padding: 12,
         borderRadius: 5,
         flex: 1,
         marginHorizontal: 5,
         alignItems: 'center',
+    },
+    closeButton: {
+        position: 'absolute',
+        bottom: 20,
+        backgroundColor: Theme.danger,
+        padding: 10,
+        borderRadius: 5,
+        alignSelf: 'center',
     },
 
     /* === FORMS & INPUTS === */
@@ -208,7 +192,7 @@ export const styles = StyleSheet.create({
     },
     camera: {
         width: '100%',
-        height: '100%',
+        height: '80%',
         justifyContent: 'flex-end',
     },
     loadingContainer: {

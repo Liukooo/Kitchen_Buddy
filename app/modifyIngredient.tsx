@@ -135,7 +135,13 @@ const ModifyIngredientScreen: React.FC = () => {
       {isExactDate ? (
           <DatePicker 
             date={expirationDate} 
-            onDateChange={setExpirationDate}
+            onDateChange={(date) => {
+              setExpirationDate(date);
+              setModifiedIngredient({
+                ...modifiedIngredient, 
+                expirationDate: date.toISOString().split("T")[0]
+              });
+            }}  
           />
         ) : (
           <>
@@ -143,7 +149,13 @@ const ModifyIngredientScreen: React.FC = () => {
             <Picker 
               selectedValue={commonEstimate} 
               style={styles.picker} 
-              onValueChange={setCommonEstimate}
+              onValueChange={(itemValue) => {
+                setCommonEstimate(itemValue); 
+                setModifiedIngredient({ 
+                  ...modifiedIngredient, 
+                  expirationDate: getEstimatedDate(itemValue) 
+                });
+              }}
             >
               <Picker.Item label="Select Date" value="" />
               <Picker.Item label="2 days from now" value="2 days" />
@@ -156,10 +168,10 @@ const ModifyIngredientScreen: React.FC = () => {
 
       {/* Buttons */}
       <ThemedView style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.saveButton} onPress={handleSaveChanges}>
+        <TouchableOpacity style={styles.successButton} onPress={handleSaveChanges}>
           <ThemedText style={styles.buttonText}>Save</ThemedText>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.discardButton} onPress={handleDiscardChanges}>
+        <TouchableOpacity style={styles.dangerButton} onPress={handleDiscardChanges}>
           <ThemedText style={styles.buttonText}>Discard</ThemedText>
         </TouchableOpacity>
       </ThemedView>
