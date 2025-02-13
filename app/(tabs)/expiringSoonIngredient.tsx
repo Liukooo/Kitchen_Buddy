@@ -11,6 +11,7 @@ import { Ingredient } from '@/constants/Ingredient';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { styles } from "@/components/ui/Styles";
+import { Status } from '@/constants/Options';
 
 const ExpiringSoonScreen: React.FC = () => {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
@@ -46,11 +47,13 @@ const ExpiringSoonScreen: React.FC = () => {
       <ThemedView style={styles.content}>
         <FlatList
           data={ingredients}
+          showsVerticalScrollIndicator={false}
           keyExtractor={(item, index) => `${item.name}-${index}`}
           renderItem={({ item }) => {
             const today = new Date();
             const expirationDate = new Date(item.expirationDate);
             const isExpired = expirationDate < today;
+            const statusLabel = Status.find((s) => s.value === item.status)?.label || item.status;
 
             return (
               <ThemedView style={styles.itemContainer}>
@@ -62,10 +65,30 @@ const ExpiringSoonScreen: React.FC = () => {
                 ) : (
                   <ThemedText style={styles.itemSubText}>Expires on: {item.expirationDate}</ThemedText>
                 )}
+
+              {/* Ripeness Status */}
+                {item.status && (
+                  <>
+                    <ThemedText style={styles.itemSubText}>Status: {statusLabel}</ThemedText>
+                  </>
+                )}
               
               {/* Opened Ingredients */}
                 {item.isOpened && (
                   <ThemedText style={styles.itemDangerText}>OPENED</ThemedText>
+                )}
+
+              {/* Opened Ingredients */}
+                {item.lastCheckedAt && (
+                  <ThemedText style={styles.itemSubText}>
+                    Last checked: {new Date(item.lastCheckedAt).toLocaleDateString()}
+                  </ThemedText>
+                )}
+
+                {!item.lastCheckedAt || (new Date().getTime() - new Date(item.lastCheckedAt).getTime()) / (1000 * 60 * 60 * 24) > 3 && (
+                  <ThemedText style={styles.itemDangerText}>
+                    Needs checking! ⚠️
+                  </ThemedText>
                 )}
                 
               </ThemedView>

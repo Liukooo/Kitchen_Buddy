@@ -103,6 +103,7 @@ const AddIngredientScreen: React.FC = () => {
       type: confection,
       status: ripeness,
       expirationDate: computedExpirationDate,
+      lastCheckedAt: isFresh ? new Date().toISOString() : "",
     };
 
     const updatedIngredients = [...ingredients, newIngredient];
@@ -115,6 +116,8 @@ const AddIngredientScreen: React.FC = () => {
       `Name: ${newIngredient.name}\nBrand: ${newIngredient.brand}\nCategory: ${newIngredient.category}\nLocation: ${newIngredient.location}\nType: ${newIngredient.type}\nExpiration Date: ${newIngredient.expirationDate}`,
       [{ text: "OK", onPress: resetForm }]
     )
+
+    console.log(newIngredient);
   };
 
   // Handles Barcode Scan and Add Ingredient
@@ -250,6 +253,7 @@ const AddIngredientScreen: React.FC = () => {
             ))}
         </Picker>
 
+        {/* Ripeness Status */}
         {isFresh && (
           <>
             <ThemedText style={styles.label}>Ripeness Status:</ThemedText>

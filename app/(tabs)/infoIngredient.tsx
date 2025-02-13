@@ -208,6 +208,7 @@ const InfoIngredientsScreen: React.FC = () => {
         {/* Ingredients */}
         <FlatList
           data={filteredIngredients}
+          showsVerticalScrollIndicator={false}
           keyExtractor={(item, index) => `${item.name}-${index}`}
           renderItem={({ item }) => (
             <ThemedView style={styles.item}>

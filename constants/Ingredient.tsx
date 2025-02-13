@@ -7,4 +7,6 @@ export interface Ingredient {
     status?: string;
     isOpened?: boolean;
     expirationDate: string; // Stored as YYYY-MM-DD
+    ripenessChangedAt?: string;
+    lastCheckedAt?: string;
   }

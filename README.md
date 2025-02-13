@@ -20,7 +20,7 @@ The **More Info** tab allows users to visualize and query all added ingredients 
 
 For comprehensive edits, the **Modify Ingredient** tab enables users to change all details of a selected ingredient.
 
-When selecting an ingredient as **fresh**, users can assign a **ripeness** status (e.g., **unripe, ripe, overripe, rotten**), which can be manually updated. If an ingredient is **opened**, the expiration date is immediately adjusted. If a fresh ingredient is **frozen**, its original expiration date is **automatically extended by six months**.
+When selecting an ingredient as **fresh**, users can assign a **ripeness** status (e.g., **unripe, ripe, overripe, rotten**), which can be manually updated as the ingredient matures. Once a ripeness status is set, the ingredient requires a **check** at least every three days to ensure accuracy. If an ingredient is marked as **opened**, its expiration date is immediately adjusted based on its remaining shelf life. Additionally, if a fresh ingredient is **frozen**, its original expiration date is *automatically extended by six months.
 
 Items that are **ripe or opened** are added to the **Expiring Soon** list. Frozen items are **excluded** from this list unless their adjusted expiration date is approaching.
 
@@ -60,10 +60,10 @@ Here is a more detailed explanation:
 ## Tasks list ✅
 
 - [x] Persistence: the application's data persists accross execution.
-- [ ] Ripeness: fresh ingredients have a ripeness or maturity status (e.g., green, ripe/mature, advanced, too ripe). This maturity status can be edited, and the date when it was edited is stored (something ripe a week ago might not be good anymore!).
+- [x] Ripeness: fresh ingredients have a ripeness or maturity status (e.g., green, ripe/mature, advanced, too ripe). This maturity status can be edited, and the date when it was edited is stored (something ripe a week ago might not be good anymore!).
 - [x] Frozen: fresh ingredients can be frozen. This also extend their expiration date to be at least 6 months.
 - [x] Open: some ingredients last only a short time after being opened (e.g., a yogurt) When an ingredient is set as open, their expiry date can be changed to account for this.
 - [x] Barcode scanning: the application uses Expo's BarCodeScanner API to read barcodes. It can then query OpenFoodFacts, and if succesful, it retrieves data about the item automatically.
 - [x] Brand: some items can have brands, in addition to names.
-- [ ] Items that have a ripeness status need to be checked regularly. If the last check was more than 3 days ago, they are added.
+- [x] Items that have a ripeness status need to be checked regularly. If the last check was more than 3 days ago, they are added.
 - [ ] Items that are ripe, and open items, are added to the "expiring soon" query; items that are frozen are removed from it (unless their new expiry date is coming up)

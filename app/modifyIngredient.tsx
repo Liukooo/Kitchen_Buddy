@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import {
   Alert,
@@ -35,18 +35,38 @@ const ModifyIngredientScreen: React.FC = () => {
   const route = useRoute();
   const { ingredient } = route.params as { ingredient: Ingredient };
 
-  const [initialType] = useState(ingredient.type);
   const [initialExpirationDate] = useState(new Date(ingredient.expirationDate))
   const [hasBeenFrozen, setHasBeenFrozen] = useState(false); // Tracks if freezing was applied
+  const [isChecked, setIsChecked] = useState(false); // Tracks if ingredient was checked
   const [isOpened, setIsOpened] = useState(ingredient.isOpened || false);
-  const [modifiedIngredient, setModifiedIngredient] = useState<Ingredient>({ ...ingredient });
   const [isExactDate, setIsExactDate] = useState(!!ingredient.expirationDate);
   const [commonEstimate, setCommonEstimate] = useState(ingredient.expirationDate || "");
   const [expirationDate, setExpirationDate] = useState(
     ingredient.expirationDate ? new Date(ingredient.expirationDate) : new Date()
   );
+  const [modifiedIngredient, setModifiedIngredient] = useState<Ingredient>({ ...ingredient});
 
-  const { setConfection, isFresh } = useRipeness(ingredient.type || "", ingredient.status);
+  const { confection, setConfection, ripeness, setRipeness, isFresh } = useRipeness(ingredient.type || "", ingredient.status);
+
+  const now = new Date().toISOString(); 
+  
+  // Updates ripeness info when it changes
+  useEffect(() => {
+    // If ripeness status has changed and confection type is fresh
+    if (modifiedIngredient.status !== ripeness && modifiedIngredient.type === "fresh") {
+      setModifiedIngredient((prev) => ({
+        ...prev,
+        status: ripeness,
+        // Tracks when ripeness changes
+        ripenessChangedAt: now,
+        // Updates last checked time
+        lastCheckedAt: now,
+      }));
+      // When ripeness status changes the checking is automatic
+      setIsChecked(true);
+    }
+  }, [ripeness]);
+  
 
   // Sets the ingredient as opened and shortens its expiration date based on how many days remain
   const handleOpenChanges = (newValue: boolean) => {
@@ -112,43 +132,72 @@ const ModifyIngredientScreen: React.FC = () => {
     }
   };
   
+  // Updates last checked time when user manually checks ripeness
+  const handleCheckRipeness = () => {
+    setIsChecked(true)
+    setModifiedIngredient((prev) => ({
+      ...prev,
+      lastCheckedAt: now,
+    }));
+  };
 
   // Freezes ingredient only once if changing from a fresh type to frozen and extends expiration by 6 months
-  const handleTypeChanges = (itemValue: string) => {
-    setConfection(itemValue);
-    setModifiedIngredient((prev) => ({ ...prev, type: itemValue }));
+  const handleTypeChanges = (newType: string) => {
+    setConfection(newType);
   
-    if (itemValue === "frozen" && initialType === "fresh" && !hasBeenFrozen) {
-      // Extends expiration date by 6 months
-      const newExpirationDate = new Date(initialExpirationDate);
-      newExpirationDate.setMonth(newExpirationDate.getMonth() + 6);
+    setModifiedIngredient((prev) => {
+      // Previously fresh?
+      const wasFresh = prev.type === "fresh"; 
+      // Now changing to fresh?
+      const isNowFresh = newType === "fresh"; 
+      // Now changing to frozen?
+      const isNowFrozen = newType === "frozen"; 
   
-      setExpirationDate(newExpirationDate);
-      setModifiedIngredient((prev) => ({
-        ...prev,
-        type: itemValue,
-        expirationDate: newExpirationDate.toISOString().split("T")[0],
-      }));
+      let updatedExpirationDate = prev.expirationDate;
+      let resetRipeness = prev.status;
+      let resetCheckedAt = prev.lastCheckedAt;
   
-      setHasBeenFrozen(true);
+      // Resets ripeness if leaving fresh
+      if (!isNowFresh) {
+        resetRipeness = "";
+        resetCheckedAt = "";
+        setIsChecked(false);
+      }
+  
+      // If now is set as frozen, before was fresh and was not already frozen
+      if (isNowFrozen && wasFresh && !hasBeenFrozen) {
+        // Extends expiration date by 6 months
+        const frozenExpiration = new Date(initialExpirationDate);
+        frozenExpiration.setMonth(frozenExpiration.getMonth() + 6);
+  
+        updatedExpirationDate = frozenExpiration.toISOString().split("T")[0];
+        setExpirationDate(frozenExpiration);
+        setHasBeenFrozen(true);
+  
+        Alert.alert(
+          `Item has been frozen! 🧊`,
+          `The expiration date has been updated to: ${updatedExpirationDate}`
+        );
+      } 
 
-      Alert.alert(
-        `Item has been frozen! 🧊`,
-        `The expiration date has been updated to: ${newExpirationDate.toISOString().split("T")[0]}`
-      );
-    } else if (itemValue !== "frozen" && hasBeenFrozen) {
       // Reverts expiration date if switching away from frozen
-      setExpirationDate(initialExpirationDate);
-      setModifiedIngredient((prev) => ({
+      else if (!isNowFrozen && hasBeenFrozen) {
+        updatedExpirationDate = initialExpirationDate.toISOString().split("T")[0];
+        setExpirationDate(initialExpirationDate);
+        setHasBeenFrozen(false);
+      }
+  
+      // Clears and updated values
+      return {
         ...prev,
-        type: itemValue,
-        expirationDate: initialExpirationDate.toISOString().split("T")[0],
-      }));
-      
-      setHasBeenFrozen(false);
-    }
-  };  
-
+        type: newType,
+        status: resetRipeness,
+        lastCheckedAt: resetCheckedAt,
+        expirationDate: updatedExpirationDate,
+      };
+    });
+  };
+  
   // Handles Button Save Changes
   const handleSaveChanges = async () => {
     try {
@@ -157,6 +206,10 @@ const ModifyIngredientScreen: React.FC = () => {
       
       const updatedIngredient = {
         ...modifiedIngredient,
+        type: confection,
+        status: isFresh ? ripeness : "",
+        ripenessChangedAt: modifiedIngredient.ripenessChangedAt,
+        lastCheckedAt: modifiedIngredient.lastCheckedAt,
         expirationDate: isExactDate ? expirationDate.toISOString().split("T")[0] : getEstimatedDate(commonEstimate),
       };
 
@@ -235,12 +288,13 @@ const ModifyIngredientScreen: React.FC = () => {
           ))}
       </Picker>
 
+      {/* Ripeness Status */}
       {isFresh && (
         <>
           <Picker 
           selectedValue={modifiedIngredient.status}
            style={styles.picker} 
-           onValueChange={(itemValue) => setModifiedIngredient((prev) => ({ ...prev, status: itemValue }))}>
+           onValueChange={(itemValue) => {setRipeness(itemValue); setIsChecked(true)}}>
             {Status.map((item) => (
                 <Picker.Item key={item.value} label={item.label} value={item.value} />
               ))}
@@ -248,6 +302,18 @@ const ModifyIngredientScreen: React.FC = () => {
         </>
       )}
 
+      {/* Check */}
+      {isFresh && modifiedIngredient.status && (
+        <ThemedView style={styles.switchContainer}>
+          <ThemedText>Checked?</ThemedText>
+          <Switch
+            value={isChecked}
+            onValueChange={handleCheckRipeness}
+            trackColor={{ false: "#ccc", true: "#81b0ff" }}
+          />
+        </ThemedView>
+      )}
+      
       {/* Switch for Open */}
       <ThemedView style={styles.switchContainer}>
         <ThemedText>Opened?</ThemedText>
