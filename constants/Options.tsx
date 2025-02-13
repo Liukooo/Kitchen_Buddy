@@ -24,3 +24,11 @@ export const Types = [
   { label: "Frozen", value: "frozen" },
   { label: "Cured", value: "cured" },
 ];
+
+export const Status = [
+  { label: "Select Status", value: "" },
+  { label: "Unripe", value: "unripe" },
+  { label: "Ripe", value: "ripe" },
+  { label: "Overripe", value: "overripe" },
+  { label: "Rotten", value: "rotten" },
+];

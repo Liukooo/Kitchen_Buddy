@@ -1,6 +1,6 @@
-# Welcome to your Expo app 👋
+# Welcome to Kitchen Buddy 🥕🤖
 
-This is an [Expo](https://expo.dev) mobile app developed by **Luca Borrelli** (StudentID: **19057**) with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app) for the Engineering of Mobile System course. The app helps track kitchen ingredients, allowing users to efficiently manage their food storage by recording expiration dates, ripeness, and heling decreaese the food waste.
+This is an [Expo](https://expo.dev) mobile app developed by **Luca Borrelli** (StudentID: **19057**) with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app) for the Engineering of Mobile System course. The app helps the users to efficiently track kitchen ingredients, monitor expiration dates, assess ripeness, and reduce food waste
 
 ## Features 📌
 * Ingredient Tracking
@@ -14,7 +14,7 @@ This is an [Expo](https://expo.dev) mobile app developed by **Luca Borrelli** (S
 ## Description and App Flow 📖
 After getting started with the app and granting camera permissions, users can manually input ingredient details such as **name, category, location, confection type, and expiration date**. Only the name is required to add an ingredient. Alternatively, ingredients can be scanned using the **barcode scanner**, which fetches product details from OpenFoodFacts. Users can also specify the brand of an item. All these operations are accessible in the **Add Ingredient** tab.
 
-Ingredients are categorized and stored based on predefined **categories, locations, and confection types**. Users can view ingredients that will **expire within 3 days** in the **Expiring Soon** tab, which updates dynamically whenever an item is added or modified.
+Ingredients are categorized and stored based on predefined **categories, locations, and confection types**. Users can view ingredients that will **expire within 7 days** in the **Expiring Soon** tab, which updates dynamically whenever an item is added or modified.
 
 The **More Info** tab allows users to visualize and query all added ingredients based on **category, location, confection type, missing data, or recent additions**. Ingredients with a **ripeness** status should be checked regularly (at least every 3 days). Additionally, users can **modify or delete** ingredients from this tab.
 
@@ -62,7 +62,7 @@ Here is a more detailed explanation:
 - [x] Persistence: the application's data persists accross execution.
 - [ ] Ripeness: fresh ingredients have a ripeness or maturity status (e.g., green, ripe/mature, advanced, too ripe). This maturity status can be edited, and the date when it was edited is stored (something ripe a week ago might not be good anymore!).
 - [x] Frozen: fresh ingredients can be frozen. This also extend their expiration date to be at least 6 months.
-- [ ] Open: some ingredients last only a short time after being opened (e.g., a yogurt) When an ingredient is set as open, their expiry date can be changed to account for this.
+- [x] Open: some ingredients last only a short time after being opened (e.g., a yogurt) When an ingredient is set as open, their expiry date can be changed to account for this.
 - [x] Barcode scanning: the application uses Expo's BarCodeScanner API to read barcodes. It can then query OpenFoodFacts, and if succesful, it retrieves data about the item automatically.
 - [x] Brand: some items can have brands, in addition to names.
 - [ ] Items that have a ripeness status need to be checked regularly. If the last check was more than 3 days ago, they are added.

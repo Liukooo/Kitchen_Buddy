@@ -17,8 +17,9 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Ingredient } from '@/constants/Ingredient';
 import { styles } from "@/components/ui/Styles";
-import { Categories, Locations, Types } from '@/constants/Options';
+import { Categories, Locations, Types, Status } from '@/constants/Options';
 import DatePicker from '@/components/DatePicker';
+import { useRipeness } from "@/hooks/useRipeness";
 import { getEstimatedDate } from '@/scripts/Functions';
 
 
@@ -44,6 +45,8 @@ const ModifyIngredientScreen: React.FC = () => {
   const [expirationDate, setExpirationDate] = useState(
     ingredient.expirationDate ? new Date(ingredient.expirationDate) : new Date()
   );
+
+  const { setConfection, isFresh } = useRipeness(ingredient.type || "", ingredient.status);
 
   // Sets the ingredient as opened and shortens its expiration date based on how many days remain
   const handleOpenChanges = (newValue: boolean) => {
@@ -112,6 +115,9 @@ const ModifyIngredientScreen: React.FC = () => {
 
   // Freezes ingredient only once if changing from a fresh type to frozen and extends expiration by 6 months
   const handleTypeChanges = (itemValue: string) => {
+    setConfection(itemValue);
+    setModifiedIngredient((prev) => ({ ...prev, type: itemValue }));
+  
     if (itemValue === "frozen" && initialType === "fresh" && !hasBeenFrozen) {
       // Extends expiration date by 6 months
       const newExpirationDate = new Date(initialExpirationDate);
@@ -125,7 +131,7 @@ const ModifyIngredientScreen: React.FC = () => {
       }));
   
       setHasBeenFrozen(true);
-  
+
       Alert.alert(
         `Item has been frozen! 🧊`,
         `The expiration date has been updated to: ${newExpirationDate.toISOString().split("T")[0]}`
@@ -138,12 +144,10 @@ const ModifyIngredientScreen: React.FC = () => {
         type: itemValue,
         expirationDate: initialExpirationDate.toISOString().split("T")[0],
       }));
-  
+      
       setHasBeenFrozen(false);
-    } else {
-      setModifiedIngredient((prev) => ({ ...prev, type: itemValue }));
     }
-  };
+  };  
 
   // Handles Button Save Changes
   const handleSaveChanges = async () => {
@@ -230,6 +234,19 @@ const ModifyIngredientScreen: React.FC = () => {
             <Picker.Item key={item.value} label={item.label} value={item.value} />
           ))}
       </Picker>
+
+      {isFresh && (
+        <>
+          <Picker 
+          selectedValue={modifiedIngredient.status}
+           style={styles.picker} 
+           onValueChange={(itemValue) => setModifiedIngredient((prev) => ({ ...prev, status: itemValue }))}>
+            {Status.map((item) => (
+                <Picker.Item key={item.value} label={item.label} value={item.value} />
+              ))}
+          </Picker>
+        </>
+      )}
 
       {/* Switch for Open */}
       <ThemedView style={styles.switchContainer}>

@@ -16,7 +16,7 @@ import { Picker } from "@react-native-picker/picker";
 import { Camera, CameraView } from "expo-camera";
 
 // Local imports
-import { Categories, Locations, Types } from "@/constants/Options";
+import { Categories, Locations, Types, Status } from "@/constants/Options";
 import { Ingredient } from "@/constants/Ingredient";
 import { getEstimatedDate } from "@/scripts/Functions";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
@@ -24,15 +24,14 @@ import DatePicker from "@/components/DatePicker";
 import { styles } from "@/components/ui/Styles";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { useFocusEffect } from "expo-router";
-
+import { useRipeness } from "@/hooks/useRipeness";
 
 const AddIngredientScreen: React.FC = () => {
   const [ingredientName, setIngredientName] = useState("");
   const [brand, setBrand] = useState("");
   const [category, setCategory] = useState("");
   const [location, setLocation] = useState("");
-  const [confection, setConfection] = useState("");
+  const { confection, setConfection, ripeness, setRipeness, isFresh } = useRipeness("");
   const [isExactDate, setIsExactDate] = useState(false);
   const [expirationDate, setExpirationDate] = useState(new Date());
   const [commonEstimate, setCommonEstimate] = useState("");
@@ -55,6 +54,7 @@ const AddIngredientScreen: React.FC = () => {
     setCategory("");
     setLocation("");
     setConfection("");
+    setRipeness("");
     setIsExactDate(false);
     setExpirationDate(new Date());
     setCommonEstimate("");
@@ -76,6 +76,13 @@ const AddIngredientScreen: React.FC = () => {
       setHasPermission(status === "granted");
     })();
   }, []);
+
+  // Reset ripeness status for non fresh ingredients
+  useEffect(() => {
+    if (!isFresh) {
+      setRipeness("");
+    }
+  }, [isFresh]);
   
   // Handles Add Ingredient 
   const handleAddIngredient = async () => {
@@ -94,6 +101,7 @@ const AddIngredientScreen: React.FC = () => {
       category,
       location,
       type: confection,
+      status: ripeness,
       expirationDate: computedExpirationDate,
     };
 
@@ -135,6 +143,8 @@ const AddIngredientScreen: React.FC = () => {
           category: "",
           location: "",
           type: "",
+          status: "",
+          isOpened: false,
           expirationDate: "",
         };
   
@@ -239,6 +249,17 @@ const AddIngredientScreen: React.FC = () => {
               <Picker.Item key={item.value} label={item.label} value={item.value} />
             ))}
         </Picker>
+
+        {isFresh && (
+          <>
+            <ThemedText style={styles.label}>Ripeness Status:</ThemedText>
+            <Picker selectedValue={ripeness} style={styles.picker} onValueChange={setRipeness}>
+              {Status.map((item) => (
+                  <Picker.Item key={item.value} label={item.label} value={item.value} />
+                ))}
+            </Picker>
+          </>
+        )}
 
         {/* Switch for Exact Date */}
         <ThemedView style={styles.switchContainer}>
