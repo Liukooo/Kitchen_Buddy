@@ -58,6 +58,11 @@ const InfoIngredientsScreen: React.FC = () => {
     }, [])
   );
 
+  // Applys filters when a filter changes
+  useEffect(() => {
+    applyFilters();
+  }, [selectedCategory, selectedLocation, selectedConfection, activeFilter]);
+
   // Applys filters
   const applyFilters = () => {
     let results = ingredients;
@@ -82,11 +87,6 @@ const InfoIngredientsScreen: React.FC = () => {
 
     setFilteredIngredients(results);
   };
-
-  // Applys filters when a filter changes
-  useEffect(() => {
-    applyFilters();
-  }, [selectedCategory, selectedLocation, selectedConfection, activeFilter]);
 
   // Resets all filters
   const clearFilters = () => {

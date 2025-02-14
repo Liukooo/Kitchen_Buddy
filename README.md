@@ -16,11 +16,11 @@ After getting started with the app and granting camera permissions, users can ma
 
 Ingredients are categorized and stored based on predefined **categories, locations, and confection types**. Users can view ingredients that will **expire within 7 days** in the **Expiring Soon** tab, which updates dynamically whenever an item is added or modified.
 
-The **More Info** tab allows users to visualize and query all added ingredients based on **category, location, confection type, missing data, or recent additions**. Ingredients with a **ripeness** status should be checked regularly (at least every 3 days). Additionally, users can **modify or delete** ingredients from this tab.
+The **More Info** tab allows users to visualize and query all added ingredients based on **category, location, confection type, missing data, or recent additions**. Additionally, users can **modify or delete** ingredients from this tab.
 
 For comprehensive edits, the **Modify Ingredient** tab enables users to change all details of a selected ingredient.
 
-When selecting an ingredient as **fresh**, users can assign a **ripeness** status (e.g., **unripe, ripe, overripe, rotten**), which can be manually updated as the ingredient matures. Once a ripeness status is set, the ingredient requires a **check** at least every three days to ensure accuracy. If an ingredient is marked as **opened**, its expiration date is immediately adjusted based on its remaining shelf life. Additionally, if a fresh ingredient is **frozen**, its original expiration date is *automatically extended by six months.
+When selecting an ingredient as **fresh**, users can assign a **ripeness** status (e.g., **unripe, ripe, overripe, rotten**), which can be manually updated as the ingredient matures. Once a ripeness status is set, the ingredient requires a **check** at least every 3 days to ensure accuracy. If an ingredient is marked as **opened**, its expiration date is immediately adjusted based on its remaining shelf life. Additionally, if a fresh ingredient is **frozen**, its original expiration date is automatically extended by six months.
 
 Items that are **ripe or opened** are added to the **Expiring Soon** list. Frozen items are **excluded** from this list unless their adjusted expiration date is approaching.
 
@@ -54,6 +54,7 @@ Here is a more detailed explanation:
 - `/assets` → Images and fonts.
 - `/components` → Reusable Layout and UI components.
 - `/constants` → Constants and TypeScript interfaces.
+- `/hooks` → States and other features
 - `/scripts` → Logic and helper functions.
 
 
@@ -66,4 +67,4 @@ Here is a more detailed explanation:
 - [x] Barcode scanning: the application uses Expo's BarCodeScanner API to read barcodes. It can then query OpenFoodFacts, and if succesful, it retrieves data about the item automatically.
 - [x] Brand: some items can have brands, in addition to names.
 - [x] Items that have a ripeness status need to be checked regularly. If the last check was more than 3 days ago, they are added.
-- [ ] Items that are ripe, and open items, are added to the "expiring soon" query; items that are frozen are removed from it (unless their new expiry date is coming up)
+- [x] Items that are ripe, and open items, are added to the "expiring soon" query; items that are frozen are removed from it (unless their new expiry date is coming up)

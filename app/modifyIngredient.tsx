@@ -35,8 +35,10 @@ const ModifyIngredientScreen: React.FC = () => {
   const route = useRoute();
   const { ingredient } = route.params as { ingredient: Ingredient };
 
+  const [initialStatus] = useState(ingredient.status);
   const [initialExpirationDate] = useState(new Date(ingredient.expirationDate))
-  const [hasBeenFrozen, setHasBeenFrozen] = useState(false); // Tracks if freezing was applied
+  const [hasBeenFrozen, setHasBeenFrozen] = useState(false); // Tracks if frozen was applied
+  const [hasBeenRipped, setHasBeenRipped] = useState(false); // Tracks if ripe was applied
   const [isChecked, setIsChecked] = useState(false); // Tracks if ingredient was checked
   const [isOpened, setIsOpened] = useState(ingredient.isOpened || false);
   const [isExactDate, setIsExactDate] = useState(!!ingredient.expirationDate);
@@ -48,8 +50,11 @@ const ModifyIngredientScreen: React.FC = () => {
 
   const { confection, setConfection, ripeness, setRipeness, isFresh } = useRipeness(ingredient.type || "", ingredient.status);
 
-  const now = new Date().toISOString(); 
-  
+  const today = new Date();
+  const now = today.toISOString(); 
+
+  const daysRemaining = Math.ceil((initialExpirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
   // Updates ripeness info when it changes
   useEffect(() => {
     // If ripeness status has changed and confection type is fresh
@@ -71,9 +76,7 @@ const ModifyIngredientScreen: React.FC = () => {
   // Sets the ingredient as opened and shortens its expiration date based on how many days remain
   const handleOpenChanges = (newValue: boolean) => {
     if (newValue) {
-      const today = new Date();
       const newExpirationDate = new Date(initialExpirationDate);
-      const daysRemaining = Math.ceil((initialExpirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
   
       let shouldShowAlert = false;
   
@@ -81,7 +84,7 @@ const ModifyIngredientScreen: React.FC = () => {
         // Set expiration to exactly 7 days from today
         newExpirationDate.setDate(today.getDate() + 7);
         shouldShowAlert = true;
-      } else if (0 < daysRemaining && daysRemaining <= 7) {
+      } else if (daysRemaining > 0) {
         // Cut the remaining time in half
         newExpirationDate.setDate(today.getDate() + Math.max(0, Math.floor(daysRemaining / 2)));
         shouldShowAlert = true;
@@ -146,28 +149,25 @@ const ModifyIngredientScreen: React.FC = () => {
     setConfection(newType);
   
     setModifiedIngredient((prev) => {
-      // Previously fresh?
-      const wasFresh = prev.type === "fresh"; 
-      // Now changing to fresh?
-      const isNowFresh = newType === "fresh"; 
       // Now changing to frozen?
       const isNowFrozen = newType === "frozen"; 
+      // Copy the initial expiration date
+      const frozenExpiration = new Date(initialExpirationDate);
   
       let updatedExpirationDate = prev.expirationDate;
       let resetRipeness = prev.status;
       let resetCheckedAt = prev.lastCheckedAt;
   
-      // Resets ripeness if leaving fresh
-      if (!isNowFresh) {
+      // Resets ripeness if type leaves fresh
+      if (!(newType === "fresh")) {
         resetRipeness = "";
         resetCheckedAt = "";
         setIsChecked(false);
       }
   
       // If now is set as frozen, before was fresh and was not already frozen
-      if (isNowFrozen && wasFresh && !hasBeenFrozen) {
+      if (prev.type === "fresh" && isNowFrozen && !hasBeenFrozen) {
         // Extends expiration date by 6 months
-        const frozenExpiration = new Date(initialExpirationDate);
         frozenExpiration.setMonth(frozenExpiration.getMonth() + 6);
   
         updatedExpirationDate = frozenExpiration.toISOString().split("T")[0];
@@ -187,7 +187,7 @@ const ModifyIngredientScreen: React.FC = () => {
         setHasBeenFrozen(false);
       }
   
-      // Clears and updated values
+      // Updated values
       return {
         ...prev,
         type: newType,
@@ -197,6 +197,54 @@ const ModifyIngredientScreen: React.FC = () => {
       };
     });
   };
+
+  const handleRipnessChanges = (newRipeness: string) => {
+    setRipeness(newRipeness);
+    setIsChecked(true);
+
+    setModifiedIngredient((prev) => {
+      // Now changing to frozen?
+      const isNowRipe = newRipeness === "ripe";
+      // Copy the current expiration date
+      const ripeExpiration = new Date(expirationDate);
+
+      let updatedExpirationDate = prev.expirationDate;
+  
+      // Check if transitioning from 'unripe' to 'ripe'
+      if (initialStatus === "unripe" && isNowRipe && !hasBeenRipped) {
+        
+        if (daysRemaining > 7) {
+          ripeExpiration.setDate(today.getDate() + 7);
+        } else if (daysRemaining > 0) {
+          ripeExpiration.setDate(today.getDate() + Math.max(1, Math.floor(daysRemaining / 2)));
+        }
+
+        updatedExpirationDate = ripeExpiration.toISOString().split("T")[0];
+        setHasBeenRipped(true);
+  
+        Alert.alert(
+          "Ripeness Updated 🍌",
+          `The expiration date has been adjusted to: ${updatedExpirationDate}`
+        );
+      }
+
+      // Reverts expiration date if switching away from ripe
+      else if (!isNowRipe && hasBeenRipped) {
+        updatedExpirationDate = initialExpirationDate.toISOString().split("T")[0];
+        setExpirationDate(initialExpirationDate);
+        setHasBeenRipped(false);
+      }
+  
+      setExpirationDate(new Date(updatedExpirationDate));
+
+      return {
+        ...prev,
+        status: newRipeness,
+        expirationDate: updatedExpirationDate,
+        lastCheckedAt: now,
+      };
+    });
+  }
   
   // Handles Button Save Changes
   const handleSaveChanges = async () => {
@@ -294,7 +342,7 @@ const ModifyIngredientScreen: React.FC = () => {
           <Picker 
           selectedValue={modifiedIngredient.status}
            style={styles.picker} 
-           onValueChange={(itemValue) => {setRipeness(itemValue); setIsChecked(true)}}>
+           onValueChange={handleRipnessChanges}>
             {Status.map((item) => (
                 <Picker.Item key={item.value} label={item.label} value={item.value} />
               ))}
