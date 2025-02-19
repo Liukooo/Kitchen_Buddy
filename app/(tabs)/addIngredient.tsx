@@ -89,7 +89,7 @@ const AddIngredientScreen: React.FC = () => {
   }, [isFresh]);
   
   // Function to create a new ingredient object
-  const createIngredient = (name: string, brand: string, category: string, location: string, confection: string, ripeness: string, expirationDate: string, isFresh: boolean): Ingredient => ({
+  const createIngredient = (name: string, brand: string, category: string, location: string, confection: string, ripeness: string, expirationDate: string): Ingredient => ({
     name,
     brand,
     category,
@@ -97,7 +97,8 @@ const AddIngredientScreen: React.FC = () => {
     type: confection,
     status: ripeness,
     expirationDate,
-    lastCheckedAt: isFresh ? new Date().toISOString() : undefined,
+    // Checked date is set only if Ingredient has a ripeness status
+    lastCheckedAt: ripeness ? new Date().toISOString() : undefined,
   });
 
   // Function to persist ingredients to AsyncStorage
@@ -114,7 +115,7 @@ const AddIngredientScreen: React.FC = () => {
       return;
     }
 
-    const newIngredient = createIngredient(ingredientName, brand, category, location, confection, ripeness, computedExpirationDate, isFresh);
+    const newIngredient = createIngredient(ingredientName, brand, category, location, confection, ripeness, computedExpirationDate);
     
     await saveIngredients(newIngredient, ingredients);
     
@@ -186,20 +187,29 @@ const AddIngredientScreen: React.FC = () => {
     }
   };
 
-  // Requests camera permission when the barcode scanner is accessed
+  // Requests again camera permission when the barcode scanner is accessed
   const checkPermissions = async () => {
     const { status, canAskAgain } = await Camera.requestCameraPermissionsAsync();
   
     // If permission is granted, it enables scanning
-    if (status === "granted") setHasPermission(true);
+    if (status === "granted") {
+      setHasPermission(true);
+      return;
+    }
 
     // If permission is denied, prompts the user to open settings
-    if (status === "denied" && !canAskAgain) {
-      showConfirmation(
-        "Camera Permission Denied",
-        "You need to enable camera permissions in settings to use this feature.",
-        () => Linking.openSettings()
-      );
+    if (status === "denied") {
+      setHasPermission(false);
+  
+      if (!canAskAgain) {
+        showConfirmation(
+          "Camera Permission Denied",
+          "You need to enable camera permissions in settings to use this feature.",
+          () => Linking.openSettings()
+        );
+      }
+  
+      return;
     }
 
     setHasPermission(false);
@@ -207,10 +217,10 @@ const AddIngredientScreen: React.FC = () => {
 
   return (
     <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
+      headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
       headerImage={
         <Image
-          source={require('@/assets/images/icon.jpg')}
+          source={require("@/assets/images/icon.jpg")}
           style={styles.image}
         />
       }>

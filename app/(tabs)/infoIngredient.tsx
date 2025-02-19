@@ -7,15 +7,15 @@ import {
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import type { StackNavigationProp } from "@react-navigation/stack";
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import type { StackNavigationProp } from '@react-navigation/stack';
 
 // Local imports
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { showConfirmation } from "@/components/ShowAlert";
-import { styles } from "@/components/ui/Styles";
+import { showConfirmation } from '@/components/ShowAlert';
+import { styles } from '@/components/ui/Styles';
 import { Ingredient } from '@/constants/Ingredient';
 import { Categories, Locations, Types } from '@/constants/Options';
 import {
@@ -37,10 +37,10 @@ type NavigationProps = StackNavigationProp<RootStackParamList, "InfoIngredient">
 const InfoIngredientsScreen: React.FC = () => {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [filteredIngredients, setFilteredIngredients] = useState<Ingredient[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [selectedLocation, setSelectedLocation] = useState<string>('');
-  const [selectedConfection, setSelectedConfection] = useState<string>('');
-  const [activeFilter, setActiveFilter] = useState<string>('all'); // Track the active query
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [selectedLocation, setSelectedLocation] = useState<string>("");
+  const [selectedConfection, setSelectedConfection] = useState<string>("");
+  const [activeFilter, setActiveFilter] = useState<string>("all"); // Track the active query
   const navigation = useNavigation<NavigationProps>();
 
   // Fetches all Ingredients from AsyncStorage
@@ -65,13 +65,13 @@ const InfoIngredientsScreen: React.FC = () => {
     let results = ingredients;
 
     // Applys button filters first for Missing Data and Recently Added
-    if (activeFilter === 'missing') results = getMissingData(ingredients);
-    else if (activeFilter === 'recent') results = getRecentlyAdded(ingredients);
+    if (activeFilter === "missing") results = getMissingData(ingredients);
+    else if (activeFilter === "recent") results = getRecentlyAdded(ingredients);
 
     // Applys dropdown filters
-    if (selectedCategory) results = getByCategoryOrConfection(results, selectedCategory, '');
+    if (selectedCategory) results = getByCategoryOrConfection(results, selectedCategory, "");
     if (selectedLocation) results = getByLocation(results, selectedLocation);
-    if (selectedConfection) results = getByCategoryOrConfection(results, '', selectedConfection);
+    if (selectedConfection) results = getByCategoryOrConfection(results, "", selectedConfection);
 
     setFilteredIngredients(results);
   };
@@ -83,10 +83,10 @@ const InfoIngredientsScreen: React.FC = () => {
 
   // Resets all filters
   const clearFilters = () => {
-    setActiveFilter('all'); // Resets button filters
-    setSelectedCategory('');
-    setSelectedLocation('');
-    setSelectedConfection(''); 
+    setActiveFilter("all"); // Resets button filters
+    setSelectedCategory("");
+    setSelectedLocation("");
+    setSelectedConfection(""); 
     fetchIngredients(); // Shows all ingredients
   };
 
@@ -123,8 +123,8 @@ const InfoIngredientsScreen: React.FC = () => {
 
           {/* Recently */}
           <TouchableOpacity
-            style={[styles.primaryButton, activeFilter === 'recent' && styles.secondaryButton]}
-            onPress={() => setActiveFilter('recent')}
+            style={[styles.primaryButton, activeFilter === "recent" && styles.secondaryButton]}
+            onPress={() => setActiveFilter("recent")}
             activeOpacity={0.7}
           >
             <ThemedText style={styles.buttonText}>Recently Added</ThemedText>
@@ -132,8 +132,8 @@ const InfoIngredientsScreen: React.FC = () => {
 
           {/* Missing */}
           <TouchableOpacity
-            style={[styles.primaryButton, activeFilter === 'missing' && styles.secondaryButton]}
-            onPress={() => setActiveFilter('missing')}
+            style={[styles.primaryButton, activeFilter === "missing" && styles.secondaryButton]}
+            onPress={() => setActiveFilter("missing")}
             activeOpacity={0.7}
           >
             <ThemedText style={styles.buttonText}>Missing Data</ThemedText>

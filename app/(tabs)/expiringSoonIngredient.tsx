@@ -10,7 +10,7 @@ import { getExpiringSoon } from '@/scripts/Functions';
 import { Ingredient } from '@/constants/Ingredient';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { styles } from "@/components/ui/Styles";
+import { styles } from '@/components/ui/Styles';
 import { Status } from '@/constants/Options';
 
 const ExpiringSoonScreen: React.FC = () => {

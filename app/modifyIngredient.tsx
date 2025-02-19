@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import {
   Switch,
@@ -30,7 +30,7 @@ type RootStackParamList = {
 
 const ModifyIngredientScreen: React.FC = () => {
   // Defines navigation props
-  const navigation = useNavigation<StackNavigationProp<RootStackParamList, 'modifyIngredient'>>();
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList, "modifyIngredient">>();
 
   const route = useRoute();
   const { ingredient } = route.params as { ingredient: Ingredient };
@@ -51,7 +51,8 @@ const ModifyIngredientScreen: React.FC = () => {
   const { confection, setConfection, ripeness, setRipeness, isFresh } = useRipeness(ingredient.type || "", ingredient.status);
 
   const today = new Date();
-  const now = today.toISOString(); 
+  const now = today.toISOString();
+  const nowRef = useRef(new Date().toISOString());
 
   const daysRemaining = Math.max(0, Math.ceil((initialExpirationDate.getTime() - today.getTime()) / 86400000));
 
@@ -59,11 +60,16 @@ const ModifyIngredientScreen: React.FC = () => {
   useEffect(() => {
     // If ripeness status has changed and confection type is fresh
     if (modifiedIngredient.type === "fresh" && modifiedIngredient.status !== ripeness) {
-      setModifiedIngredient((prev) => updateCheckedIngredient(prev, now));
+      setModifiedIngredient((prev) => updateCheckedIngredient(prev, true, nowRef.current));
       // When ripeness status changes the checking is automatic
       setIsChecked(true);
     }
-  }, [ripeness, modifiedIngredient.type, now]);
+    else if (modifiedIngredient.type !== "fresh") {
+      // If the ingredient is no longer fresh, reset the checked state
+      setModifiedIngredient((prev) => updateCheckedIngredient(prev, false, ""));
+      setIsChecked(false);
+    }
+  }, [ripeness, modifiedIngredient.type]);
 
   // Updates Ingredients Type and freezes ingredient only once if changing from a fresh type to frozen and extends expiration by 6 months
   const updateIngredientType = (ingredient: Ingredient, newType: string, initialExpirationDate: Date, hasBeenFrozen: boolean): Ingredient => {
@@ -241,17 +247,31 @@ const ModifyIngredientScreen: React.FC = () => {
   };  
   
   // Updates last checked time when ripeness is manually checked
-  const updateCheckedIngredient = (ingredient: Ingredient, timestamp: string): Ingredient => {
+  const updateCheckedIngredient = (ingredient: Ingredient, isChecked: boolean, time: string): Ingredient => {
     return {
       ...ingredient,
-      lastCheckedAt: timestamp,
+      lastCheckedAt: isChecked ? time : ingredient.lastCheckedAt,
     };
   };
 
   // Handles manual ripeness check
-  const handleCheckRipeness = () => {
-    setIsChecked(true)
-    setModifiedIngredient((prev) => updateCheckedIngredient(prev, now));
+  const handleCheckRipeness = (newValue: boolean) => {
+    setIsChecked(newValue);
+  
+    setModifiedIngredient((prev) => {
+      const updatedIngredient = updateCheckedIngredient(prev, newValue, now);
+  
+      if (newValue) {
+        showConfirmation(
+          "Ripeness Checked ✅",
+          `You have checked the ripeness. Last checked time has been updated.\nWould you like to proceed?`,
+          () => {},
+          () => setIsChecked(false)
+        );
+      }
+  
+      return updatedIngredient;
+    });
   };
 
   // Updates the ingredient list with modified data
@@ -280,7 +300,7 @@ const ModifyIngredientScreen: React.FC = () => {
   // Handles Button Save Changes
   const handleSaveChanges = async () => {
     try {
-      const storedIngredients = await AsyncStorage.getItem('ingredients');
+      const storedIngredients = await AsyncStorage.getItem("ingredients");
       let ingredients: Ingredient[] = storedIngredients ? JSON.parse(storedIngredients) : [];
   
       // Uses saveUpdatedIngredient to update the ingredient list
@@ -295,16 +315,16 @@ const ModifyIngredientScreen: React.FC = () => {
         commonEstimate
       );
   
-      await AsyncStorage.setItem('ingredients', JSON.stringify(updatedIngredients));
-      showAlert('Success 🎉', 'Ingredient updated successfully!', () => navigation.goBack());
+      await AsyncStorage.setItem("ingredients", JSON.stringify(updatedIngredients));
+      showAlert("Success 🎉", "Ingredient updated successfully!", () => navigation.goBack());
     } catch (error) {
-      showAlert('Error', 'Failed to update ingredient');
+      showAlert("Error", "Failed to update ingredient");
     }
   };  
 
   // Handles Button Discard Changes
   const handleDiscardChanges = async () => {
-    showConfirmation('Discard Changes?', 'Are you sure you want to discard changes?', () => navigation.goBack());
+    showConfirmation("Discard Changes?", "Are you sure you want to discard changes?", () => navigation.goBack());
   };
 
   return (
