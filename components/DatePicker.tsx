@@ -17,22 +17,24 @@ const DatePicker: React.FC<DatePickerProps> = ({ date, onDateChange }) => {
 
   // Handles the Date selection in the DataTimePicker
   const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    if (event.type === "dismissed") return setShowPicker(false);
-    if (selectedDate) onDateChange(selectedDate);
+    if (event?.type === "dismissed") setShowPicker(false);
+    if (selectedDate) onDateChange(selectedDate); 
     setShowPicker(false);
   };
 
   return (
     <ThemedView>
       {Platform.OS === "web" ? (
-        <TextInput
+        <input
+          type="date"
           style={styles.input}
-          value={date.toISOString().split("T")[0]}
-          onChangeText={(text) => {
-                const parsedDate = new Date(text);
-                if (!isNaN(parsedDate.getTime())) onDateChange(parsedDate);
+          value={date.toISOString().split("T")[0]} // Formats to YYYY-MM-DD
+          onChange={(event) => {
+            const newDate = new Date(event.target.value);
+            if (!isNaN(newDate.getTime())) {
+              onDateChange(newDate);
+            }
           }}
-          placeholder="YYYY-MM-DD"
         />
       ) : (
         <>

@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import {
-  Alert,
   FlatList,
   TouchableOpacity
 } from 'react-native';
@@ -15,6 +14,7 @@ import type { StackNavigationProp } from "@react-navigation/stack";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { showConfirmation } from "@/components/ShowAlert";
 import { styles } from "@/components/ui/Styles";
 import { Ingredient } from '@/constants/Ingredient';
 import { Categories, Locations, Types } from '@/constants/Options';
@@ -43,93 +43,73 @@ const InfoIngredientsScreen: React.FC = () => {
   const [activeFilter, setActiveFilter] = useState<string>('all'); // Track the active query
   const navigation = useNavigation<NavigationProps>();
 
-  // Fetches Ingredients from AsyncStorage and applys filters
+  // Fetches all Ingredients from AsyncStorage
+  const fetchIngredients = async () => {
+    const storedIngredients = await AsyncStorage.getItem("ingredients");
+    if (!storedIngredients) return;
+
+    const parsedIngredients: Ingredient[] = JSON.parse(storedIngredients);
+
+    setIngredients(parsedIngredients);
+    setFilteredIngredients(parsedIngredients);
+  };
+
   useFocusEffect(
-    React.useCallback(() => {
-      const fetchIngredients = async () => {
-        const storedIngredients = await AsyncStorage.getItem('ingredients');
-        if (storedIngredients) {
-          const parsedIngredients: Ingredient[] = JSON.parse(storedIngredients);
-          setIngredients(parsedIngredients);
-          setFilteredIngredients(parsedIngredients);
-        }
-      };
+    useCallback(() => {
       fetchIngredients();
     }, [])
   );
-
-  // Applys filters when a filter changes
-  useEffect(() => {
-    applyFilters();
-  }, [selectedCategory, selectedLocation, selectedConfection, activeFilter]);
 
   // Applys filters
   const applyFilters = () => {
     let results = ingredients;
 
     // Applys button filters first for Missing Data and Recently Added
-    if (activeFilter === 'missing') {
-      results = getMissingData(ingredients);
-    } else if (activeFilter === 'recent') {
-      results = getRecentlyAdded(ingredients);
-    }
+    if (activeFilter === 'missing') results = getMissingData(ingredients);
+    else if (activeFilter === 'recent') results = getRecentlyAdded(ingredients);
 
-    // Applys dropdown filters on top of button filters
-    if (selectedCategory) {
-      results = getByCategoryOrConfection(results, selectedCategory, '');
-    }
-    if (selectedLocation) {
-      results = getByLocation(results, selectedLocation);
-    }
-    if (selectedConfection) {
-      results = getByCategoryOrConfection(results, '', selectedConfection);
-    }
+    // Applys dropdown filters
+    if (selectedCategory) results = getByCategoryOrConfection(results, selectedCategory, '');
+    if (selectedLocation) results = getByLocation(results, selectedLocation);
+    if (selectedConfection) results = getByCategoryOrConfection(results, '', selectedConfection);
 
     setFilteredIngredients(results);
   };
+
+  // Applys filters when a filter changes
+  useEffect(() => {
+    applyFilters();
+  }, [selectedCategory, selectedLocation, selectedConfection, activeFilter]);
 
   // Resets all filters
   const clearFilters = () => {
     setActiveFilter('all'); // Resets button filters
     setSelectedCategory('');
     setSelectedLocation('');
-    setSelectedConfection('');
-    setFilteredIngredients(ingredients); // Shows all ingredients
+    setSelectedConfection(''); 
+    fetchIngredients(); // Shows all ingredients
   };
 
   // Handles the Button Edit Ingredient
   const handleEditIngredient = (ingredient: Ingredient) => {
-    Alert.alert(
+    showConfirmation(
       "Edit Ingredient",
       `You selected: ${ingredient.name}`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Continue",
-          onPress: () => navigation.navigate("modifyIngredient", { ingredient }),
-        },
-      ]
+      () => navigation.navigate("modifyIngredient", { ingredient })
     );
   };
 
   // Handles Button Delete Ingredient
   const handleDeleteIngredient = async (ingredient: Ingredient) => {
-    Alert.alert(
+    showConfirmation(
       "Delete Ingredient?",
       `Are you sure you want to delete ${ingredient.name}?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            const updatedIngredients = ingredients.filter((i) => i !== ingredient);
-            await AsyncStorage.setItem("ingredients", JSON.stringify(updatedIngredients));
-            setIngredients(updatedIngredients);
-            setFilteredIngredients(updatedIngredients);
-          },
-        },
-      ]
+      async () => {
+        const updatedIngredients = ingredients.filter((i) => i !== ingredient);
+        await AsyncStorage.setItem("ingredients", JSON.stringify(updatedIngredients));
+        setIngredients(updatedIngredients);
+        setFilteredIngredients(updatedIngredients);
+      }
     );
   };
 
@@ -209,7 +189,7 @@ const InfoIngredientsScreen: React.FC = () => {
         <FlatList
           data={filteredIngredients}
           showsVerticalScrollIndicator={false}
-          keyExtractor={(item, index) => `${item.name}-${index}`}
+          keyExtractor={(item) => `${item.name}-${item.expirationDate}-${item.lastCheckedAt || ""}`}
           renderItem={({ item }) => (
             <ThemedView style={styles.item}>
 

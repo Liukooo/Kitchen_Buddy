@@ -2,7 +2,6 @@ import React, { useEffect, useState, useMemo, useCallback } from "react";
 
 import {
   ActivityIndicator,
-  Alert,
   Image,
   Linking,
   Modal,
@@ -24,21 +23,23 @@ import DatePicker from "@/components/DatePicker";
 import { styles } from "@/components/ui/Styles";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { showConfirmation, showAlert } from "@/components/ShowAlert";
 import { useRipeness } from "@/hooks/useRipeness";
+import { useFocusEffect } from "expo-router";
 
 const AddIngredientScreen: React.FC = () => {
-  const [ingredientName, setIngredientName] = useState("");
-  const [brand, setBrand] = useState("");
-  const [category, setCategory] = useState("");
-  const [location, setLocation] = useState("");
+  const [ingredientName, setIngredientName] = useState<string>("");
+  const [brand, setBrand] = useState<string>("");
+  const [category, setCategory] = useState<string>("");
+  const [location, setLocation] = useState<string>("");
   const { confection, setConfection, ripeness, setRipeness, isFresh } = useRipeness("");
-  const [isExactDate, setIsExactDate] = useState(false);
-  const [expirationDate, setExpirationDate] = useState(new Date());
-  const [commonEstimate, setCommonEstimate] = useState("");
+  const [isExactDate, setIsExactDate] = useState<boolean>(false);
+  const [expirationDate, setExpirationDate] = useState<Date>(new Date());
+  const [commonEstimate, setCommonEstimate] = useState<string>("");
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
-  const [scanning, setScanning] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [scanning, setScanning] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
 
   // Transforms Exact Date or Estimated Date into processable String
   const computedExpirationDate = useMemo(() => {
@@ -60,65 +61,70 @@ const AddIngredientScreen: React.FC = () => {
     setCommonEstimate("");
   };
 
-  // Loads stored ingredients from AsyncStorage
-  useEffect(() => {
-    const loadIngredients = async () => {
-      const storedIngredients = await AsyncStorage.getItem("ingredients");
-      if (storedIngredients) setIngredients(JSON.parse(storedIngredients));
-    };
-    loadIngredients();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      const fetchData = async () => {
+        // Loads stored ingredients
+        const storedIngredients = await AsyncStorage.getItem("ingredients");
+        if (storedIngredients) setIngredients(JSON.parse(storedIngredients));
+      };
+    
+      fetchData();
+    }, [])
+  );
 
-  // Requests camera permissions
   useEffect(() => {
-    (async () => {
+    const requestCameraPermission = async () => {
+      // Requests camera permission
       const { status } = await Camera.requestCameraPermissionsAsync();
       setHasPermission(status === "granted");
-    })();
+    };
+  
+    requestCameraPermission();
   }, []);
 
-  // Reset ripeness status for non fresh ingredients
+  // Resets ripeness status for non fresh ingredients
   useEffect(() => {
-    if (!isFresh) {
-      setRipeness("");
-    }
+    if (!isFresh) setRipeness("");
   }, [isFresh]);
   
-  // Handles Add Ingredient 
-  const handleAddIngredient = async () => {
+  // Function to create a new ingredient object
+  const createIngredient = (name: string, brand: string, category: string, location: string, confection: string, ripeness: string, expirationDate: string, isFresh: boolean): Ingredient => ({
+    name,
+    brand,
+    category,
+    location,
+    type: confection,
+    status: ripeness,
+    expirationDate,
+    lastCheckedAt: isFresh ? new Date().toISOString() : undefined,
+  });
+
+  // Function to persist ingredients to AsyncStorage
+  const saveIngredients = async (newIngredient: Ingredient, existingIngredients: Ingredient[]) => {
+    const updatedIngredients = [...existingIngredients, newIngredient];
+    await AsyncStorage.setItem("ingredients", JSON.stringify(updatedIngredients));
+    setIngredients(updatedIngredients);
+  };
+
+  // Handles Adding new Ingredient
+  const handleAddIngredient = useCallback(async () => {
     if (!ingredientName.trim()) {
-      Alert.alert(
-        "Alert 🚫",
-        "Please enter an item name."
-      );
+      showAlert("Alert 🚫", "Please enter an item name.");
       return;
     }
 
-    // Saves to AsyncStorage
-    const newIngredient: Ingredient = {
-      name: ingredientName,
-      brand,
-      category,
-      location,
-      type: confection,
-      status: ripeness,
-      expirationDate: computedExpirationDate,
-      lastCheckedAt: isFresh ? new Date().toISOString() : "",
-    };
-
-    const updatedIngredients = [...ingredients, newIngredient];
-    await AsyncStorage.setItem("ingredients", JSON.stringify(updatedIngredients));
-    setIngredients(updatedIngredients);
-
-    // Shows success alert
-    Alert.alert(
-      `Ingredient Added ✅`,
+    const newIngredient = createIngredient(ingredientName, brand, category, location, confection, ripeness, computedExpirationDate, isFresh);
+    
+    await saveIngredients(newIngredient, ingredients);
+    
+    showAlert(
+      "Ingredient Added ✅",
       `Name: ${newIngredient.name}\nBrand: ${newIngredient.brand}\nCategory: ${newIngredient.category}\nLocation: ${newIngredient.location}\nType: ${newIngredient.type}\nExpiration Date: ${newIngredient.expirationDate}`,
-      [{ text: "OK", onPress: resetForm }]
-    )
+      resetForm
+    );
+  }, [ingredientName, brand, category, location, confection, ripeness, computedExpirationDate, isFresh, ingredients, setIngredients, resetForm]);
 
-    console.log(newIngredient);
-  };
 
   // Handles Barcode Scan and Add Ingredient
   const handleBarCodeScanned = async ({ data }: { data: string }) => {
@@ -142,11 +148,6 @@ const AddIngredientScreen: React.FC = () => {
         // Saves to AsyncStorage
         const newIngredient: Ingredient = {
           name: ingredientName,
-          brand: "",
-          category: "",
-          location: "",
-          type: "",
-          status: "",
           isOpened: false,
           expirationDate: "",
         };
@@ -162,17 +163,24 @@ const AddIngredientScreen: React.FC = () => {
         await AsyncStorage.setItem("ingredients", JSON.stringify(updatedIngredients));
   
         // Shows success alert
-        Alert.alert("Product Found!",
+        showAlert(
+          "Product Found!",
           `Scanned: ${ingredientName}`,
-          [{ text: "OK", onPress: resetForm }]
+          resetForm
         )
       } else {
         // Shows not found alert
-        Alert.alert("Error", "Product not found in OpenFoodFacts");
+        showConfirmation(
+          "Error",
+          "Product not found in OpenFoodFacts"
+        )
       }
     } catch (error) {
       // Shows error alert
-      Alert.alert("Error", "Failed to fetch product details.");
+      showConfirmation(
+        "Error", 
+        "Failed to fetch product details."
+      )
     } finally {
       setLoading(false);
     }
@@ -182,19 +190,19 @@ const AddIngredientScreen: React.FC = () => {
   const checkPermissions = async () => {
     const { status, canAskAgain } = await Camera.requestCameraPermissionsAsync();
   
-    if (status === "granted") {
-      // If permission is granted, it enables scanning
-      setHasPermission(true);
-    } else if (status === "denied" && !canAskAgain) {
-      // If permission is denied, prompts the user to open settings
-      Alert.alert(
+    // If permission is granted, it enables scanning
+    if (status === "granted") setHasPermission(true);
+
+    // If permission is denied, prompts the user to open settings
+    if (status === "denied" && !canAskAgain) {
+      showConfirmation(
         "Camera Permission Denied",
         "You need to enable camera permissions in settings to use this feature.",
-        [{ text: "Open Settings", onPress: () => Linking.openSettings() }, { text: "Cancel" }]
+        () => Linking.openSettings()
       );
-    } else {
-      setHasPermission(false);
     }
+
+    setHasPermission(false);
   };
 
   return (

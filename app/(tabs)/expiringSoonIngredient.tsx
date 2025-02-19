@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { FlatList } from 'react-native';
 
@@ -16,28 +16,35 @@ import { Status } from '@/constants/Options';
 const ExpiringSoonScreen: React.FC = () => {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
 
-  // Fetches Ingredients from AsyncStorage and adds to the list only Expiring Soon
+  // Fetch expiring soon ingredients
+  const fetchExpiringIngredients = async () => {
+    try {
+    const storedIngredients = await AsyncStorage.getItem("ingredients");
+    if (!storedIngredients) return;
+
+    const parsedIngredients: Ingredient[] = JSON.parse(storedIngredients);
+    // Expiring soon Ingrendients has 7 days left
+    const expiringSoon = getExpiringSoon(parsedIngredients, 7).sort(
+      (a, b) => new Date(a.expirationDate).getTime() - new Date(b.expirationDate).getTime()
+    );
+
+    setIngredients(expiringSoon);
+    } catch (error) {
+      console.error("Failed to fetch expiring ingredients:", error);
+    }
+  };
+
   useFocusEffect(
-  React.useCallback(() => {
-      const fetchIngredients = async () => {
-        const storedIngredients = await AsyncStorage.getItem('ingredients');
-        if (storedIngredients) {
-          const parsedIngredients: Ingredient[] = JSON.parse(storedIngredients);
-          const expiringSoon = getExpiringSoon(parsedIngredients, 7);
-
-          // Sorts ingredients by expiration date
-          const sortedIngredients = expiringSoon.sort((a, b) =>
-            new Date(a.expirationDate).getTime() - new Date(b.expirationDate).getTime()
-          );
-
-          setIngredients(sortedIngredients);
-        }
-      };
-
-      fetchIngredients();
+    useCallback(() => {
+      fetchExpiringIngredients();
     }, [])
   );
 
+  const needsChecking = (lastCheckedAt?: string) => {
+    if (!lastCheckedAt) return true;
+    const lastCheckedDate = new Date(lastCheckedAt);
+    return (new Date().getTime() - lastCheckedDate.getTime()) / (1000 * 60 * 60 * 24) > 3;
+  };
 
   return (
     <ThemedView style={styles.container}>
@@ -48,7 +55,7 @@ const ExpiringSoonScreen: React.FC = () => {
         <FlatList
           data={ingredients}
           showsVerticalScrollIndicator={false}
-          keyExtractor={(item, index) => `${item.name}-${index}`}
+          keyExtractor={(item) => `${item.name}-${item.expirationDate}`}
           renderItem={({ item }) => {
             const today = new Date();
             const expirationDate = new Date(item.expirationDate);

@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Kitchen_Buddy",
-    "slug": "Kitchen_Buddy",
+    "slug": "kitchenbuddy",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/splash-icon.png",
@@ -15,7 +15,11 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.CAMERA"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -36,6 +40,21 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "6858259d-1ce2-4ca3-8c6e-54e889837d6a"
+      }
+    },
+    "owner": "liuko",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/6858259d-1ce2-4ca3-8c6e-54e889837d6a"
     }
   }
 }
